@@ -27,6 +27,50 @@ const STEPS = [
   ["5", "Pay the expert", "Settled in EURD over x402 on Algorand. Real money, so someone's accountable."],
 ];
 
+function MatrixRain() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const glyphs = "アァカサタナハマヤラワガザダバパゴ012345789ABCDEFZ$€<>/\\|=+".split("");
+    const fontSize = 18;
+    let W, H, cols, drops, raf;
+    function resize() {
+      W = canvas.width = canvas.offsetWidth;
+      H = canvas.height = canvas.offsetHeight;
+      cols = Math.max(1, Math.floor(W / fontSize));
+      drops = Array.from({ length: cols }, () => Math.floor((Math.random() * -H) / fontSize));
+    }
+    resize();
+    window.addEventListener("resize", resize);
+    function draw() {
+      ctx.fillStyle = "rgba(10,10,10,0.10)"; // fade the trails
+      ctx.fillRect(0, 0, W, H);
+      ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
+      for (let i = 0; i < cols; i++) {
+        const ch = glyphs[(Math.random() * glyphs.length) | 0];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+        ctx.shadowColor = "#e5352b"; // red glisten
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = "rgba(255,255,255,0.92)"; // white glyph
+        ctx.fillText(ch, x, y);
+        ctx.shadowBlur = 0;
+        if (y > H && Math.random() > 0.972) drops[i] = 0;
+        drops[i] += 0.6;
+      }
+      raf = requestAnimationFrame(draw);
+    }
+    draw();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+  return <canvas ref={ref} className="matrix" aria-hidden="true" />;
+}
+
 function Terminal() {
   const [n, setN] = useState(0);
   const ref = useRef(null);
@@ -73,15 +117,19 @@ export default function App() {
 
       {/* HERO */}
       <header className="hero">
-        <img className="wordmark" src={asset("slides/wordmark.jpeg")} alt="tenet — self driving commerce" />
-        <p className="lede">
-          Your agent makes the decision you'd rather not — and <strong>pays an expert it can't fool.</strong>
-        </p>
-        <div className="cta">
-          <a className="btn" href="#demo">See the demo</a>
-          <a className="btn ghost" href="#how">How it works</a>
+        <MatrixRain />
+        <div className="hero-inner">
+          <h1 className="wordmark-text">tenet</h1>
+          <div className="wordmark-sub">self-driving commerce</div>
+          <p className="lede">
+            Your agent makes the decision you'd rather not — and <strong>pays an expert it can't fool.</strong>
+          </p>
+          <div className="cta">
+            <a className="btn" href="#demo">See the demo</a>
+            <a className="btn ghost" href="#how">How it works</a>
+          </div>
+          <p className="kicker">x402 · Algorand · EURD</p>
         </div>
-        <p className="kicker">self-driving commerce · x402 · Algorand · EURD</p>
       </header>
 
       {/* PROBLEM */}
@@ -115,7 +163,7 @@ export default function App() {
       <section id="demo" className="demo">
         <div className="demo-copy">
           <span className="tag">live demo</span>
-          <h2 className="big">The agent pays to<br/>not get scammed.</h2>
+          <h2 className="big">The agent pays you<br/>for your expertise.</h2>
           <p className="body">
             A Claude-Code agent is told to book a Berlin Airbnb. Before it commits, it pays <strong>€0.05
             EURD over x402 on Algorand</strong>, asks the tenet Berlin expert over the real mixnet, and
