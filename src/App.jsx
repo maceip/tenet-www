@@ -102,9 +102,45 @@ function Terminal() {
   );
 }
 
+function TopRail() {
+  const [status, setStatus] = useState("checking");
+  useEffect(() => {
+    let alive = true;
+    const NODE = "https://cdda104e90ae.aeon.site/healthz";
+    const check = () => {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 6000);
+      fetch(NODE, { mode: "no-cors", cache: "no-store", signal: ctrl.signal })
+        .then(() => { if (alive) setStatus("online"); })
+        .catch(() => { if (alive) setStatus("unreachable"); })
+        .finally(() => clearTimeout(timer));
+    };
+    check();
+    const iv = setInterval(check, 15000);
+    return () => { alive = false; clearInterval(iv); };
+  }, []);
+  const [dot, word] = {
+    checking: ["#9a9a9a", "checking…"],
+    online: ["#5ad17a", "online"],
+    unreachable: ["#e5352b", "unreachable"],
+  }[status];
+  return (
+    <div className="toprail">
+      <span className="rail-dot" style={{ background: dot, boxShadow: `0 0 8px ${dot}` }} />
+      <span className="rail-k">bootstrap matcher</span>
+      <span style={{ color: dot }}>{word}</span>
+      <span className="rail-sep">·</span>
+      <span className="rail-dim">attested nitro tee · cdda104e90ae.aeon.site</span>
+      <span className="rail-spacer" />
+      <span className="rail-dim">x402 · algorand · eurd</span>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <>
+      <TopRail />
       <nav className="nav">
         <a className="brand" href={URL}>TENET</a>
         <div className="nav-right">
