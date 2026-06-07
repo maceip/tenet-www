@@ -76,9 +76,11 @@ img { max-width: 100%; display: block; }
 }
 .vs-col { text-align: center; }
 .vs-col h3 { font-size: 22px; margin: 14px 0 8px; }
-.vs-art { font-size: 64px; line-height: 1; }
-.vs-art.one { color: #c9c9c9; }
-.vs-art.net { color: var(--red); }
+.vs-art { height: 76px; display: flex; align-items: center; justify-content: center; }
+.vs-art .blob { width: 58px; height: 58px; border-radius: 50%; background: #cfcfcf; }
+.vs-art.net { display: grid; grid-template-columns: repeat(3, 16px); gap: 11px; }
+.vs-art.net .node { width: 16px; height: 16px; border-radius: 50%; background: var(--red); }
+.vs-art.net .node:nth-child(7) { grid-column: 2; }
 .vs-mid { font-family: var(--expanded); font-weight: 900; font-size: clamp(28px, 4vw, 44px); color: var(--red); }
 
 /* ---------- demo ---------- */

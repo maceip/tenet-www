@@ -97,13 +97,15 @@ export default function App() {
       {/* VS */}
       <section className="vs">
         <div className="vs-col">
-          <div className="vs-art one">●</div>
+          <div className="vs-art"><span className="blob" /></div>
           <h3>One large model</h3>
           <p className="muted">One opinion. Same blind spots. Bribable. Out of date.</p>
         </div>
         <div className="vs-mid">vs</div>
         <div className="vs-col">
-          <div className="vs-art net">⁘</div>
+          <div className="vs-art net">
+            {Array.from({ length: 7 }).map((_, i) => <span key={i} className="node" />)}
+          </div>
           <h3>A network of experts</h3>
           <p className="muted">Independent, reputation-staked, paid per call. Corrupt a weighted majority — or don't bother.</p>
         </div>
