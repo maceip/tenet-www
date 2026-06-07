@@ -5,6 +5,125 @@ const GH = "https://github.com/maceip/tenet-www";
 // Resolve public/ assets against the Vite base (/tenet/) so they work at the subpath.
 const asset = (p) => import.meta.env.BASE_URL + p;
 
+const DOWNLOADS = [
+  { id: "macos", label: "macOS", file: "tenet-macos-arm64", arch: "arm64" },
+  { id: "linux", label: "Linux", file: "tenet-linux-x86_64", arch: "x86_64" },
+  { id: "windows", label: "Windows", file: "tenet-windows-x86_64.exe", arch: "x86_64" },
+];
+
+async function probeBinary(url) {
+  try {
+    const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+    if (!res.ok) return false;
+    const type = (res.headers.get("content-type") || "").toLowerCase();
+    if (type.includes("text/html")) return false;
+    const len = Number(res.headers.get("content-length") || 0);
+    return len > 100_000;
+  } catch {
+    return false;
+  }
+}
+
+function IconApple() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M16.52 12.45c.02 2.17 1.9 2.9 1.92 2.91-.02.06-.3 1.02-1 2.02-.6.87-1.22 1.74-2.2 1.76-.96.02-1.27-.57-2.37-.57-1.1 0-1.44.55-2.35.59-.95.04-1.67-.96-2.28-1.83-1.24-1.79-2.19-5.06-.91-7.27.64-1.1 1.78-1.8 3.02-1.82.94-.02 1.83.63 2.4.63.56 0 1.62-.78 2.74-.66.47.02 1.78.19 2.62 1.43-2.18 1.18-1.83 4.24.06 5.24zM14.18 4.2c.5-.61.84-1.46.75-2.31-.72.03-1.6.48-2.12 1.09-.46.54-.87 1.41-.76 2.24.8.06 1.62-.41 2.13-1.02z" />
+    </svg>
+  );
+}
+
+function IconLinux() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12.04 2c-3.2 0-5.8 2.1-5.8 5.2 0 1.1.4 2.1 1 2.9-.6.5-1 1.2-1 2 0 1.7 1.5 3.1 3.4 3.1.3 0 .6 0 .9-.1.5 1.5 2 2.6 3.7 2.6s3.2-1.1 3.7-2.6c.3.1.6.1.9.1 1.9 0 3.4-1.4 3.4-3.1 0-.8-.4-1.5-1-2 .6-.8 1-1.8 1-2.9C17.84 4.1 15.24 2 12.04 2zm-1.1 4.5c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9zm2.2 0c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9zm-2.5 5.8c1.1.8 2.6.8 3.7 0 .2 1.1-.7 2.1-1.8 2.1h-.1c-1.1 0-2-.9-1.8-2.1z" />
+    </svg>
+  );
+}
+
+function IconWindows() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 5.5 10.5 4.2V11H3V5.5zm0 7.5h7.5v6.8L3 18.5V13zm9-8.3L21 3.5V11h-9V4.7zm0 8.3h9v7.5l-9-1.8V13z" />
+    </svg>
+  );
+}
+
+const PLATFORM_ICONS = { macos: IconApple, linux: IconLinux, windows: IconWindows };
+
+function DownloadButtons({ className = "" }) {
+  const [ready, setReady] = useState(() => Object.fromEntries(DOWNLOADS.map((d) => [d.id, false])));
+  const [probed, setProbed] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const entries = await Promise.all(
+        DOWNLOADS.map(async (d) => {
+          const url = asset(`downloads/${d.file}`);
+          const ok = await probeBinary(url);
+          return [d.id, ok];
+        }),
+      );
+      if (alive) {
+        setReady(Object.fromEntries(entries));
+        setProbed(true);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  return (
+    <div className={`downloads ${className}`.trim()}>
+      <p className="downloads-label">debug client</p>
+      <div className="download-row" role="group" aria-label="Download debug client binaries">
+        {DOWNLOADS.map((d) => {
+          const Icon = PLATFORM_ICONS[d.id];
+          const url = asset(`downloads/${d.file}`);
+          const enabled = ready[d.id];
+          const title = enabled
+            ? `Download tenet for ${d.label} (${d.arch})`
+            : `${d.label} debug build not available yet`;
+          if (enabled) {
+            return (
+              <a
+                key={d.id}
+                className="dl-btn"
+                href={url}
+                download
+                title={title}
+                aria-label={title}
+              >
+                <Icon />
+                <span className="dl-text">
+                  <span className="dl-os">{d.label}</span>
+                  <span className="dl-arch">{d.arch}</span>
+                </span>
+              </a>
+            );
+          }
+          return (
+            <button
+              key={d.id}
+              type="button"
+              className="dl-btn"
+              disabled
+              title={title}
+              aria-label={title}
+              aria-disabled="true"
+            >
+              <Icon />
+              <span className="dl-text">
+                <span className="dl-os">{d.label}</span>
+                <span className="dl-arch">{probed ? "soon" : "…"}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // The live demo, scripted as a terminal transcript. Each entry: [class, text].
 const DEMO = [
   ["cmd", "agent: find me an airbnb in berlin — i don't want to deal with it"],
@@ -164,6 +283,7 @@ export default function App() {
             <a className="btn" href="#demo">See the demo</a>
             <a className="btn ghost" href="#how">How it works</a>
           </div>
+          <DownloadButtons />
           <p className="kicker">x402 · Algorand · EURD</p>
         </div>
       </header>
