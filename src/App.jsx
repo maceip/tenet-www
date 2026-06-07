@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 
 const URL = "https://public.computer";
 const GH = "https://github.com/maceip/tenet-www";
+// Resolve public/ assets against the Vite base (/tenet/) so they work at the subpath.
+const asset = (p) => import.meta.env.BASE_URL + p;
 
 // The live demo, scripted as a terminal transcript. Each entry: [class, text].
 const DEMO = [
@@ -71,7 +73,7 @@ export default function App() {
 
       {/* HERO */}
       <header className="hero">
-        <img className="wordmark" src="/slides/wordmark.jpeg" alt="tenet — self driving commerce" />
+        <img className="wordmark" src={asset("slides/wordmark.jpeg")} alt="tenet — self driving commerce" />
         <p className="lede">
           Your agent makes the decision you'd rather not — and <strong>pays an expert it can't fool.</strong>
         </p>
@@ -124,7 +126,7 @@ export default function App() {
 
       {/* CAR DIVIDER */}
       <section className="bleed light">
-        <img src="/slides/countach.jpeg" alt="" />
+        <img src={asset("slides/countach.jpeg")} alt="" />
         <div className="bleed-cap">self-driving commerce</div>
       </section>
 
@@ -143,13 +145,13 @@ export default function App() {
           ))}
         </ol>
         <figure className="arch">
-          <img src="/slides/architecture.jpeg" alt="tenet architecture: attested matcher, mixnet/REACH, relaxed expert" />
+          <img src={asset("slides/architecture.jpeg")} alt="tenet architecture: attested matcher, mixnet/REACH, relaxed expert" />
         </figure>
       </section>
 
       {/* CLOSER */}
       <section className="closer">
-        <img src="/slides/ship.jpeg" alt="" />
+        <img src={asset("slides/ship.jpeg")} alt="" />
         <div className="closer-overlay">
           <h2>GET EXPERTS.<br/>GET GOING.</h2>
           <a className="btn solid" href={URL}>public.computer</a>
