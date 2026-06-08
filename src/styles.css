@@ -131,8 +131,8 @@ img { max-width: 100%; display: block; }
 /* ---------- logos ---------- */
 .tenet-logo { display: block; height: auto; }
 .tenet-logo--hero { width: min(92vw, 680px); }
-.tenet-logo--nav { height: 22px; width: auto; }
-.tenet-logo--footer { height: 16px; width: auto; }
+.tenet-logo--nav { height: 34px; width: auto; }
+.tenet-logo--footer { height: 24px; width: auto; }
 /* transparent PNGs — no blend-mode white-knockout hacks. soft glow on the red mark. */
 [data-theme="dark"] .tenet-logo--red { filter: drop-shadow(0 0 22px rgba(229, 53, 43, 0.30)); }
 
