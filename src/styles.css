@@ -16,7 +16,7 @@
   --hero-kicker: #7a7a7a;
   --nav-bg: rgba(255, 255, 255, 0.86);
   --nav-border: #ececec;
-  --matrix-opacity: 0.38;
+  --matrix-opacity: 0.5;
   --dl-border: rgba(10, 10, 10, 0.14);
   --dl-bg: rgba(10, 10, 10, 0.04);
   --dl-fg: #0a0a0a;
@@ -41,7 +41,7 @@
   --hero-kicker: #8a8a8a;
   --nav-bg: rgba(10, 10, 10, 0.88);
   --nav-border: #1c1c1c;
-  --matrix-opacity: 0.55;
+  --matrix-opacity: 0.72;
   --dl-border: rgba(255, 255, 255, 0.22);
   --dl-bg: rgba(255, 255, 255, 0.06);
   --dl-fg: #f0f0f0;
@@ -132,12 +132,8 @@ img { max-width: 100%; display: block; }
 .tenet-logo--hero { width: min(92vw, 680px); }
 .tenet-logo--nav { height: 22px; width: auto; }
 .tenet-logo--footer { height: 16px; width: auto; }
-.tenet-logo--red {
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 0 32px rgba(229, 53, 43, 0.45));
-}
-[data-theme="light"] .tenet-logo--hero.tenet-logo--black { mix-blend-mode: normal; filter: none; }
-[data-theme="dark"] .tenet-logo--nav.tenet-logo--red { mix-blend-mode: screen; filter: none; }
+/* transparent PNGs — no blend-mode white-knockout hacks. soft glow on the red mark. */
+[data-theme="dark"] .tenet-logo--red { filter: drop-shadow(0 0 22px rgba(229, 53, 43, 0.30)); }
 
 /* ---------- hero ---------- */
 .hero {
@@ -152,29 +148,14 @@ img { max-width: 100%; display: block; }
   text-align: center;
   padding: clamp(60px, 11vw, 140px) clamp(20px, 5vw, 64px);
 }
-.matrix-wrap {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  opacity: var(--matrix-opacity);
-  pointer-events: none;
-}
 .matrix {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
-.matrix-cpu { display: none; }
-.matrix-wrap--cpu .matrix-gpu { display: none; }
-.matrix-wrap--cpu .matrix-cpu { display: block; }
-.matrix-wrap:not(.matrix-wrap--cpu) .matrix-gpu,
-.matrix-wrap--cpu .matrix-cpu {
-  pointer-events: auto;
-  touch-action: none;
-  cursor: crosshair;
+  z-index: 0;
+  opacity: var(--matrix-opacity);
+  pointer-events: none;
 }
 .hero-inner {
   position: relative;

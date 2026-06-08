@@ -1,123 +1,77 @@
 import { test, expect } from "@playwright/test";
 
-async function brightPixelCount(page) {
+async function matrixPixels(page) {
   return page.evaluate(() => {
-    const wrap = document.querySelector('[data-testid="matrix-rain"]');
-    const canvas = wrap?.classList.contains("matrix-wrap--cpu")
-      ? wrap.querySelector("canvas.matrix-cpu")
-      : wrap?.querySelector("canvas.matrix-gpu");
-    if (!canvas) return { bright: -1, renderer: null, instances: 0, red: 0 };
-
-    const debug = window.__matrixRainDebug;
-    const renderer = wrap?.getAttribute("data-renderer");
-
-    if (canvas.classList.contains("matrix-cpu")) {
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      if (!ctx) return { bright: -1, renderer, instances: debug?.instances ?? 0, red: 0 };
-      const { width: w, height: h } = canvas;
-      const data = ctx.getImageData(0, 0, w, h).data;
-      let bright = 0;
-      let red = 0;
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        if (r + g + b > 110) bright++;
-        if (r > 140 && r > g + 30 && r > b + 30) red++;
-      }
-      return { bright, renderer, instances: debug?.instances ?? 0, red };
+    const c = document.querySelector("canvas.matrix");
+    if (!c) return { found: false };
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    const d = ctx.getImageData(0, 0, c.width, c.height).data;
+    let lit = 0;
+    let red = 0;
+    let green = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i + 1], b = d[i + 2], a = d[i + 3];
+      if (a > 20 && r + g + b > 60) lit++;
+      if (r > 120 && r > g + 25 && r > b + 25) red++;
+      if (g > 120 && g > r + 25 && g > b + 25) green++;
     }
-
-    return { bright: -1, renderer, instances: debug?.instances ?? 0, red: 0, webgpu: true };
+    return { found: true, lit, red, green, w: c.width, h: c.height };
   });
 }
 
 async function heroFrame(page) {
   const hero = page.locator("header.hero");
   await expect(hero).toBeVisible();
-  const box = await hero.boundingBox();
-  return page.screenshot({ clip: box });
+  return hero.screenshot();
 }
 
 async function setTheme(page, theme) {
   await page.evaluate((t) => {
     document.documentElement.dataset.theme = t;
-    try {
-      localStorage.setItem("tenet-theme", t);
-    } catch {
-      /* ignore */
-    }
+    try { localStorage.setItem("tenet-theme", t); } catch { /* ignore */ }
   }, theme);
 }
 
 test.describe("matrix rain", () => {
-  test("2D fallback draws falling glyphs (dark)", async ({ page }) => {
+  test("dark: red falling glyphs render + animate (not green)", async ({ page }) => {
     await page.addInitScript(() => {
-      delete navigator.gpu;
       document.documentElement.dataset.theme = "dark";
       localStorage.setItem("tenet-theme", "dark");
     });
     await page.goto("/");
-    await page.waitForSelector('[data-testid="matrix-rain"][data-renderer="cpu"]', { timeout: 10_000 });
+    await page.waitForSelector("canvas.matrix");
+    await page.waitForTimeout(2200);
 
-    await page.waitForTimeout(900);
-    const a = await brightPixelCount(page);
-    expect(a.instances).toBeGreaterThan(20);
-    expect(a.bright).toBeGreaterThan(80);
-    expect(a.red).toBeGreaterThan(20);
+    const px = await matrixPixels(page);
+    expect(px.found).toBe(true);
+    expect(px.lit).toBeGreaterThan(500);        // glyphs are drawing
+    expect(px.red).toBeGreaterThan(200);        // it's RED matrix
+    expect(px.red).toBeGreaterThan(px.green * 3); // red, not classic green
 
+    const f1 = await heroFrame(page);
     await page.waitForTimeout(700);
-    const b = await brightPixelCount(page);
-    expect(b.instances).toBeGreaterThan(20);
-    expect(b.bright).toBeGreaterThan(80);
+    const f2 = await heroFrame(page);
+    expect(Buffer.compare(f1, f2)).not.toBe(0); // animating
   });
 
-  test("2D fallback animates in light mode", async ({ page }) => {
+  test("light: white glyphs + red glow render + animate", async ({ page }) => {
     await page.addInitScript(() => {
-      delete navigator.gpu;
       document.documentElement.dataset.theme = "light";
       localStorage.setItem("tenet-theme", "light");
     });
     await page.goto("/");
-    await page.waitForSelector('[data-testid="matrix-rain"][data-renderer="cpu"]', { timeout: 10_000 });
+    await page.waitForSelector("canvas.matrix");
+    await page.waitForTimeout(2200);
 
-    await page.waitForTimeout(900);
-    const a = await brightPixelCount(page);
-    expect(a.instances).toBeGreaterThan(50);
-    expect(a.bright).toBeGreaterThan(50);
+    const px = await matrixPixels(page);
+    expect(px.found).toBe(true);
+    expect(px.lit).toBeGreaterThan(500);   // something is drawing on the white hero
+    expect(px.red).toBeGreaterThan(50);    // the red glow is present
 
+    const f1 = await heroFrame(page);
     await page.waitForTimeout(700);
-    const b = await brightPixelCount(page);
-    expect(b.instances).toBeGreaterThan(50);
-    expect(b.bright).toBeGreaterThan(50);
-  });
-
-  test("WebGPU path animates without runtime errors", async ({ page }) => {
-    const errors = [];
-    page.on("pageerror", (e) => errors.push(e.message));
-
-    await page.goto("/");
-    await page.waitForFunction(() => {
-      const r = document.querySelector('[data-testid="matrix-rain"]')?.getAttribute("data-renderer");
-      return r === "webgpu" || r === "cpu";
-    });
-
-    const renderer = await page.getAttribute('[data-testid="matrix-rain"]', "data-renderer");
-    await page.waitForTimeout(1500);
-
-    const debug = await page.evaluate(() => window.__matrixRainDebug);
-    expect(debug?.instances ?? 0).toBeGreaterThan(20);
-    expect(errors).not.toContain("offset is out of bounds");
-
-    if (renderer === "webgpu") {
-      const frameA = await heroFrame(page);
-      await page.waitForTimeout(800);
-      const frameB = await heroFrame(page);
-      expect(Buffer.compare(frameA, frameB)).not.toBe(0);
-    } else {
-      const px = await brightPixelCount(page);
-      expect(px.bright).toBeGreaterThan(80);
-    }
+    const f2 = await heroFrame(page);
+    expect(Buffer.compare(f1, f2)).not.toBe(0);
   });
 });
 
@@ -126,14 +80,31 @@ test.describe("theme + logo", () => {
     await page.goto("/");
     await setTheme(page, "dark");
     await page.waitForTimeout(200);
-
-    const darkLogo = page.locator('[data-testid="tenet-logo-hero"]');
-    await expect(darkLogo).toBeVisible();
-    await expect(darkLogo).toHaveAttribute("src", /logo-red/);
+    const logo = page.locator('[data-testid="tenet-logo-hero"]');
+    await expect(logo).toBeVisible();
+    await expect(logo).toHaveAttribute("src", /logo-red/);
 
     await setTheme(page, "light");
     await page.waitForTimeout(200);
-    await expect(darkLogo).toHaveAttribute("src", /logo-black/);
+    await expect(logo).toHaveAttribute("src", /logo-black/);
+  });
+
+  test("hero + nav logos have a transparent background (no white box)", async ({ page }) => {
+    await page.goto("/");
+    await setTheme(page, "dark");
+    await page.waitForTimeout(250);
+    // Decode the actual logo image and sample its corners; a white box would be opaque.
+    const cornerAlpha = await page.evaluate(async () => {
+      const img = document.querySelector('[data-testid="tenet-logo-hero"]');
+      const blob = await (await fetch(img.src)).blob();
+      const bmp = await createImageBitmap(blob);
+      const cv = new OffscreenCanvas(bmp.width, bmp.height);
+      const cx = cv.getContext("2d");
+      cx.drawImage(bmp, 0, 0);
+      const corners = [[2, 2], [bmp.width - 3, 2], [2, bmp.height - 3]];
+      return corners.map(([x, y]) => cx.getImageData(x, y, 1, 1).data[3]);
+    });
+    for (const a of cornerAlpha) expect(a).toBeLessThan(20); // corners transparent
   });
 
   test("theme toggle persists on reload", async ({ page }) => {
