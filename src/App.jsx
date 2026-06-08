@@ -270,9 +270,10 @@ export default function App() {
         <MatrixRain />
         <div className="hero-inner">
           <TenetLogo variant="hero" theme={theme} />
-          <div className="wordmark-sub">self-driving commerce</div>
+          <div className="wordmark-sub">the expert network</div>
           <p className="lede">
-            Your agent makes the decision you'd rather not — and <strong>pays an expert it can't fool.</strong>
+            An open mixture-of-experts where the experts are sovereign human nodes with private knowledge,
+            the gate is a privacy-preserving oblivious matcher, and a frontier model acts as the floor.
           </p>
           <div className="cta">
             <a className="btn" href="#demo">See the demo</a>
@@ -284,11 +285,12 @@ export default function App() {
       </header>
 
       <section className="band">
-        <h2 className="big">Ask once.</h2>
+        <h2 className="big">Deniability, not secrecy.</h2>
         <p className="body wide">
-          Stop arguing with Airbnb support. Stop trusting SEO and astroturfed reviews. When the single
-          source is captured, you can't tell the right option from the scam — so before your agent commits
-          money, it pays real experts to tell you which one is real.
+          Conversations built to be <strong>unprovable</strong> — not hidden, deniable. Nobody can show the
+          exchange happened, including the people who ran the wires. This isn't compliance-grade encryption
+          marketing a sterile vault; it's infrastructure that moves information because the system is
+          structurally incapable of keeping a logbook.
         </p>
       </section>
 
@@ -330,15 +332,12 @@ export default function App() {
       <section id="demo" className="demo">
         <div className="demo-copy">
           <span className="tag">live demo</span>
-          <h2 className="big">The agent pays you<br/>for your expertise.</h2>
+          <h2 className="big">Got taste?<br/>Get paid.</h2>
           <p className="body">
-            A Claude-Code agent is told to book a Berlin Airbnb. Before it commits, it pays <strong>€0.05
-            EURD over x402 on Algorand</strong>, asks the tenet Berlin expert over the real mixnet, and
-            switches its pick when the expert flags a scam. Real payment. Real network. Real verdict.
-          </p>
-          <p className="muted small">
-            Run <code>tenet serve</code> locally to wire this terminal to your binary, or watch the offline replay.
-            We don't click "book" for you — booking is one boring API call.
+            Provide your expertise on tenet and get paid when clients route prompts through your
+            expert-context. What does this mean? All it means is we route user prompts through your
+            agent — they get the context and memory of your expertise, and you get paid! Your identity
+            and location are hidden from the network at all times.
           </p>
         </div>
         <DemoTerminal />
@@ -346,7 +345,7 @@ export default function App() {
 
       <section className="bleed light">
         <img src={asset("slides/countach.webp")} alt="" />
-        <div className="bleed-cap">self-driving commerce</div>
+        <div className="bleed-cap">the expert network</div>
       </section>
 
       <section id="how" className="how">
@@ -378,7 +377,7 @@ export default function App() {
         <span className="foot-brand">
           <TenetLogo variant="footer" theme={theme} />
         </span>
-        <span className="muted">self-driving commerce · Algorand x402</span>
+        <span className="muted">the expert network · Algorand x402</span>
         <a href={GH}>github</a>
         <a href={`${GH}/releases/latest`}>releases</a>
       </footer>

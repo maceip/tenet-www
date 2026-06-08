@@ -2,53 +2,10 @@ import { useEffect, useRef } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
+import { playDemoReplay, runOfflineAsk } from "./demoEngine.js";
 
 const LOCAL_BASE = "http://127.0.0.1:8766";
 const PROMPT = "\r\n\x1b[38;2;229;53;43mtenet\x1b[0m \u203a ";
-
-const DEMO = [
-  ["cmd", "agent: find me an airbnb in berlin — i don't want to deal with it"],
-  ["dim", "3 candidates found. about to book the cheapest, 4.8★ …"],
-  ["dim", "consulting the tenet expert network before committing"],
-  ["pay", "HTTP 402 Payment Required · €0.05 EURD · algorand"],
-  ["ok", "✓ paid · tx 4F9A…21BC ↗"],
-  ["dim", "routing question over the mixnet → berlin local expert"],
-  ["exp", "expert: listing A is Marzahn — 40 min out, recycled photos. classic scam. skip."],
-  ["exp", "expert: book listing B — Neukölln / Reuterkiez. that's where berlin actually lives."],
-  ["sw", "↳ switched pick: A → B"],
-  ["done", "decision made. you didn't have to."],
-];
-
-const STYLE = {
-  cmd: "\x1b[37m",
-  dim: "\x1b[90m",
-  pay: "\x1b[33;1m",
-  ok: "\x1b[32m",
-  exp: "\x1b[91m",
-  sw: "\x1b[1;37m",
-  done: "\x1b[96m",
-};
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function formatDemoLine(kind, text) {
-  const open = STYLE[kind] || "";
-  if (kind === "cmd") return `${open}$ ${text}\x1b[0m`;
-  return `${open}${text}\x1b[0m`;
-}
-
-async function probeLocal() {
-  try {
-    const res = await fetch(`${LOCAL_BASE}/healthz`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.ok ? data : null;
-  } catch {
-    return null;
-  }
-}
 
 function parseSseBlock(block, onEvent) {
   let event = "message";
@@ -62,6 +19,17 @@ function parseSseBlock(block, onEvent) {
     onEvent(event, JSON.parse(data));
   } catch {
     /* ignore malformed chunks */
+  }
+}
+
+async function probeLocal() {
+  try {
+    const res = await fetch(`${LOCAL_BASE}/healthz`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.ok ? data : null;
+  } catch {
+    return null;
   }
 }
 
@@ -88,6 +56,12 @@ async function streamAsk(prompt, onEvent) {
     }
   }
   if (buf.trim()) parseSseBlock(buf, onEvent);
+}
+
+function modeLabel(health) {
+  if (!health) return "browser-offline";
+  if (health.mode === "tenet-serve-offline" || health.network === false) return "local-offline";
+  return "local-live";
 }
 
 export default function DemoTerminal() {
@@ -126,33 +100,20 @@ export default function DemoTerminal() {
 
     const write = (text) => term.write(text);
     const writeln = (text = "") => term.writeln(text);
-
     const showPrompt = () => write(PROMPT);
 
-    const printHelp = (local) => {
+    const printHelp = (mode) => {
       writeln("\x1b[90m── tenet demo webshell ──\x1b[0m");
-      if (local) {
-        writeln("\x1b[32m●\x1b[0m local client connected at 127.0.0.1:8766");
-        writeln("type a question and press enter — routed through your binary.");
+      if (mode === "local-live") {
+        writeln("\x1b[32m●\x1b[0m live client at 127.0.0.1:8766 — questions hit the real network");
+      } else if (mode === "local-offline") {
+        writeln("\x1b[33m●\x1b[0m tenet-web / tenet serve --offline at 127.0.0.1:8766 (no network)");
       } else {
-        writeln("\x1b[33m○\x1b[0m offline replay — download the client to run live.");
-        writeln("  github releases → chmod +x tenet → \x1b[37mtenet serve\x1b[0m → type \x1b[37mconnect\x1b[0m");
+        writeln("\x1b[33m○\x1b[0m browser-only offline engine — no binary required");
+        writeln("  tiny build: \x1b[37mtenet serve --offline\x1b[0m or \x1b[37mtenet-web\x1b[0m → \x1b[37mconnect\x1b[0m");
+        writeln("  live network: \x1b[37mtenet serve\x1b[0m");
       }
       writeln("commands: \x1b[37mhelp\x1b[0m  \x1b[37mreplay\x1b[0m  \x1b[37mconnect\x1b[0m  \x1b[37mclear\x1b[0m");
-    };
-
-    const playReplay = async () => {
-      replayAbortRef.current?.abort();
-      const ac = new AbortController();
-      replayAbortRef.current = ac;
-      writeln("");
-      writeln("\x1b[90m# berlin airbnb replay\x1b[0m");
-      for (const [kind, text] of DEMO) {
-        if (ac.signal.aborted) return;
-        writeln(formatDemoLine(kind, text));
-        await sleep(kind === "cmd" ? 500 : 850);
-      }
-      if (!ac.signal.aborted) writeln("");
     };
 
     const setMode = (next) => {
@@ -164,13 +125,27 @@ export default function DemoTerminal() {
       const health = await probeLocal();
       writeln(health ? " \x1b[32mok\x1b[0m" : " \x1b[31munreachable\x1b[0m");
       if (health) {
-        setMode("local");
-        writeln(`\x1b[32mconnected\x1b[0m — ${health.matcher || "live network"}`);
+        const mode = modeLabel(health);
+        setMode(mode);
+        const tag = mode === "local-live" ? "live network" : "offline bridge";
+        writeln(`\x1b[32mconnected\x1b[0m — ${tag}${health.matcher ? ` · ${health.matcher}` : ""}`);
         showPrompt();
         return true;
       }
-      setMode("offline");
+      setMode("browser-offline");
       return false;
+    };
+
+    const submitLocal = async (prompt) => {
+      await streamAsk(prompt.trim(), (event, data) => {
+        if (event === "status" && data.text) writeln(`\x1b[90m${data.text}\x1b[0m`);
+        if (event === "chunk" && data.data) {
+          const color = modeRef.current === "local-offline" ? "91" : "91";
+          writeln(`\x1b[${color}m${data.data}\x1b[0m`);
+        }
+        if (event === "error") writeln(`\x1b[31merror: ${data.error}\x1b[0m`);
+        if (event === "done" && data.ok === false) writeln("\x1b[31mask failed\x1b[0m");
+      });
     };
 
     const submitPrompt = async (prompt) => {
@@ -180,15 +155,17 @@ export default function DemoTerminal() {
       }
       busyRef.current = true;
       try {
-        await streamAsk(prompt.trim(), (event, data) => {
-          if (event === "status" && data.text) writeln(`\x1b[90m${data.text}\x1b[0m`);
-          if (event === "chunk" && data.data) writeln(`\x1b[91m${data.data}\x1b[0m`);
-          if (event === "error") writeln(`\x1b[31merror: ${data.error}\x1b[0m`);
-          if (event === "done" && data.ok === false) writeln("\x1b[31mask failed\x1b[0m");
-        });
+        if (modeRef.current === "browser-offline") {
+          replayAbortRef.current?.abort();
+          const ac = new AbortController();
+          replayAbortRef.current = ac;
+          await runOfflineAsk(prompt, { writeln, abortSignal: ac.signal });
+        } else {
+          await submitLocal(prompt);
+        }
       } catch (err) {
         writeln(`\x1b[31m${err.message}\x1b[0m`);
-        setMode("offline");
+        if (modeRef.current !== "browser-offline") setMode("browser-offline");
       } finally {
         busyRef.current = false;
         showPrompt();
@@ -202,32 +179,34 @@ export default function DemoTerminal() {
         return;
       }
       if (cmd === "help") {
-        printHelp(modeRef.current === "local");
+        printHelp(modeRef.current);
         showPrompt();
         return;
       }
       if (cmd === "clear") {
         term.clear();
-        printHelp(modeRef.current === "local");
+        printHelp(modeRef.current);
         showPrompt();
         return;
       }
       if (cmd === "replay" || cmd === "demo") {
-        await playReplay();
+        replayAbortRef.current?.abort();
+        const ac = new AbortController();
+        replayAbortRef.current = ac;
+        await playDemoReplay({ writeln, abortSignal: ac.signal });
         showPrompt();
         return;
       }
       if (cmd === "connect") {
         await tryConnect();
-        if (modeRef.current !== "local") showPrompt();
+        if (modeRef.current === "browser-offline") showPrompt();
         return;
       }
-      if (modeRef.current === "local") {
+      if (modeRef.current === "local-live" || modeRef.current === "local-offline") {
         await submitPrompt(raw);
         return;
       }
-      writeln("\x1b[90moffline — run \x1b[37mtenet serve\x1b[90m locally, then type \x1b[37mconnect\x1b[0m");
-      showPrompt();
+      await submitPrompt(raw);
     };
 
     const onData = (data) => {
@@ -258,15 +237,18 @@ export default function DemoTerminal() {
     const boot = async () => {
       const health = await probeLocal();
       if (health) {
-        setMode("local");
-        printHelp(true);
+        setMode(modeLabel(health));
+        printHelp(modeRef.current);
         showPrompt();
         return;
       }
-      setMode("offline");
-      printHelp(false);
-      await playReplay();
-      writeln("\x1b[90mtype \x1b[37mhelp\x1b[90m or \x1b[37mconnect\x1b[90m after starting \x1b[37mtenet serve\x1b[0m");
+      setMode("browser-offline");
+      printHelp("browser-offline");
+      replayAbortRef.current?.abort();
+      const ac = new AbortController();
+      replayAbortRef.current = ac;
+      await playDemoReplay({ writeln, abortSignal: ac.signal });
+      writeln("\x1b[90mtype a question — runs in-browser with no network\x1b[0m");
       showPrompt();
     };
 

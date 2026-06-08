@@ -15,4 +15,15 @@ test.describe("demo webshell", () => {
     expect(text.toLowerCase()).toContain("airbnb in berlin");
     expect(text.toLowerCase()).toContain("decision made");
   });
+
+  test("browser offline ask responds without localhost", async ({ page }) => {
+    await page.goto("/#demo");
+    await page.waitForTimeout(9500);
+    await page.locator(".term-xterm").click();
+    await page.keyboard.type("find me an airbnb in berlin");
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(7000);
+    const text = await page.locator(".term-xterm .xterm-screen").innerText();
+    expect(text.toLowerCase()).toContain("neukölln");
+  });
 });
