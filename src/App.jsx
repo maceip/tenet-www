@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import MatrixRain from "./MatrixRain.jsx";
+import TenetLogo from "./TenetLogo.jsx";
+import ThemeToggle from "./ThemeToggle.jsx";
+import { getTheme, onThemeChange } from "./theme.js";
 
 const URL = "https://public.computer";
 const GH = "https://github.com/maceip/tenet";
-// Resolve public/ assets against the Vite base (/tenet/) so they work at the subpath.
 const asset = (p) => import.meta.env.BASE_URL + p;
 
 const DOWNLOADS = [
@@ -12,7 +14,6 @@ const DOWNLOADS = [
   { id: "windows", label: "Windows", file: "tenet-windows-x86_64.exe", arch: "x86_64" },
 ];
 
-// Official CI binaries — /releases/latest/download/ always tracks the newest tag.
 const RELEASE_DL = `${GH}/releases/latest/download`;
 const RELEASE_API = "https://api.github.com/repos/maceip/tenet/releases/latest";
 
@@ -87,7 +88,6 @@ function DownloadButtons({ className = "", showVersion = true }) {
   );
 }
 
-// The live demo, scripted as a terminal transcript. Each entry: [class, text].
 const DEMO = [
   ["cmd", "agent: find me an airbnb in berlin — i don't want to deal with it"],
   ["dim", "3 candidates found. about to book the cheapest, 4.8★ …"],
@@ -109,7 +109,6 @@ const STEPS = [
   ["5", "Pay the expert", "Settled in EURD over x402 on Algorand. Real money, so someone's accountable."],
 ];
 
-// What the network actually is — the substance under the demo.
 const FEATURES = [
   ["Ask once", "Submit a decision to the live network. No directory to search, no cold DMs, no inbox to spam."],
   ["Matched privately", "An attested TEE matcher picks the right experts from statistical manifests — without ever learning your question."],
@@ -152,33 +151,51 @@ function Terminal() {
 
 function TopRail() {
   const [status, setStatus] = useState("checking");
+  const [matcher, setMatcher] = useState(null);
+
   useEffect(() => {
     let alive = true;
-    const NODE = "https://cdda104e90ae.aeon.site/healthz";
+    fetch(asset("matcher.json"), { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!alive || !data?.healthz) return;
+        const healthz = data.healthz;
+        const host = new URL(healthz).hostname;
+        setMatcher({ healthz, url: data.url || healthz.replace(/\/healthz$/, "/"), host });
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!matcher?.healthz) return undefined;
+    let alive = true;
     const check = () => {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 6000);
-      fetch(NODE, { mode: "no-cors", cache: "no-store", signal: ctrl.signal })
-        .then(() => { if (alive) setStatus("online"); })
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      fetch(matcher.healthz, { cache: "no-store", signal: ctrl.signal })
+        .then((r) => { if (alive) setStatus(r.ok ? "online" : "unreachable"); })
         .catch(() => { if (alive) setStatus("unreachable"); })
         .finally(() => clearTimeout(timer));
     };
     check();
     const iv = setInterval(check, 15000);
     return () => { alive = false; clearInterval(iv); };
-  }, []);
+  }, [matcher]);
+
   const [dot, word] = {
     checking: ["#9a9a9a", "checking…"],
     online: ["#5ad17a", "online"],
     unreachable: ["#e5352b", "unreachable"],
   }[status];
+  const host = matcher?.host || "matcher pending deploy";
   return (
     <div className="toprail">
       <span className="rail-dot" style={{ background: dot, boxShadow: `0 0 8px ${dot}` }} />
       <span className="rail-k">bootstrap matcher</span>
       <span style={{ color: dot }}>{word}</span>
       <span className="rail-sep">·</span>
-      <span className="rail-dim">attested nitro tee · cdda104e90ae.aeon.site</span>
+      <span className="rail-dim">attested nitro tee · {host}</span>
       <span className="rail-spacer" />
       <span className="rail-dim">x402 · algorand · eurd</span>
     </div>
@@ -186,25 +203,31 @@ function TopRail() {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState(getTheme);
+
+  useEffect(() => onThemeChange(setTheme), []);
+
   return (
     <>
       <TopRail />
       <nav className="nav">
-        <a className="brand" href={URL}>TENET</a>
+        <a className="brand" href={URL}>
+          <TenetLogo variant="nav" theme={theme} />
+        </a>
         <div className="nav-right">
           <a href="#network">network</a>
           <a href="#demo">demo</a>
           <a href="#how">how</a>
           <a href={GH}>github</a>
+          <ThemeToggle />
           <a className="pill" href={URL}>public.computer</a>
         </div>
       </nav>
 
-      {/* HERO */}
       <header className="hero">
         <MatrixRain />
         <div className="hero-inner">
-          <h1 className="wordmark-text">tenet</h1>
+          <TenetLogo variant="hero" theme={theme} />
           <div className="wordmark-sub">self-driving commerce</div>
           <p className="lede">
             Your agent makes the decision you'd rather not — and <strong>pays an expert it can't fool.</strong>
@@ -218,7 +241,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* PROBLEM */}
       <section className="band">
         <h2 className="big">Ask once.</h2>
         <p className="body wide">
@@ -228,7 +250,6 @@ export default function App() {
         </p>
       </section>
 
-      {/* VS */}
       <section className="vs">
         <div className="vs-col">
           <div className="vs-art"><span className="blob" /></div>
@@ -245,7 +266,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* NETWORK */}
       <section id="network" className="band network">
         <span className="tag">the network</span>
         <h2 className="big">A network,<br/>not a model.</h2>
@@ -265,7 +285,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* DEMO */}
       <section id="demo" className="demo">
         <div className="demo-copy">
           <span className="tag">live demo</span>
@@ -280,13 +299,11 @@ export default function App() {
         <Terminal />
       </section>
 
-      {/* CAR DIVIDER */}
       <section className="bleed light">
         <img src={asset("slides/countach.jpeg")} alt="" />
         <div className="bleed-cap">self-driving commerce</div>
       </section>
 
-      {/* HOW */}
       <section id="how" className="how">
         <h2 className="big center">How it works</h2>
         <ol className="steps">
@@ -305,7 +322,6 @@ export default function App() {
         </figure>
       </section>
 
-      {/* CLOSER */}
       <section className="closer">
         <img src={asset("slides/ship.jpeg")} alt="" />
         <div className="closer-overlay">
@@ -315,7 +331,9 @@ export default function App() {
       </section>
 
       <footer className="foot">
-        <span>TENET</span>
+        <span className="foot-brand">
+          <TenetLogo variant="footer" theme={theme} />
+        </span>
         <span className="muted">self-driving commerce · Algorand x402</span>
         <a href={GH}>github</a>
         <a href={`${GH}/releases/latest`}>releases</a>
