@@ -25,7 +25,16 @@ test.describe("status rail histogram", () => {
     await expect(chips).toHaveCount(UPTIME_SLOTS);
 
     const height = await chips.first().evaluate((el) => el.getBoundingClientRect().height);
-    expect(height).toBeGreaterThanOrEqual(3);
+    expect(height).toBeGreaterThanOrEqual(4);
+
+    const gaps = await page.evaluate(() => {
+      const nodes = [...document.querySelectorAll(".toprail-hist .rail-chip")];
+      if (nodes.length < 2) return 0;
+      const a = nodes[0].getBoundingClientRect();
+      const b = nodes[1].getBoundingClientRect();
+      return b.left - a.right;
+    });
+    expect(gaps).toBeGreaterThanOrEqual(2);
 
     await expect(page.locator(".toprail-hist .rail-chip.online").last()).toBeVisible();
   });
