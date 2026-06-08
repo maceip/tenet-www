@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 const URL = "https://public.computer";
-const GH = "https://github.com/maceip/tenet-www";
+const GH = "https://github.com/maceip/tenet";
 // Resolve public/ assets against the Vite base (/tenet/) so they work at the subpath.
 const asset = (p) => import.meta.env.BASE_URL + p;
 
