@@ -108,12 +108,39 @@ test.describe("theme + logo", () => {
     expect(logoPixels.red).toBeGreaterThan(200);
   });
 
-  test("dark nav logo has a transparent background (no white box)", async ({ page }) => {
+  test("dark nav cycles five punk logos spanning nav height", async ({ page }) => {
+    await page.goto("/");
+    await setTheme(page, "dark");
+    await page.waitForTimeout(250);
+    const cycle = page.locator(".tenet-logo-nav-cycle");
+    await expect(cycle).toBeVisible();
+    const frames = page.locator(".tenet-logo--navbar-dark-frame");
+    await expect(frames).toHaveCount(5);
+    await expect(frames.first()).toHaveAttribute("src", /logo-navbar-dark-purple/);
+
+    const dims = await page.evaluate(() => {
+      const nav = document.querySelector(".nav");
+      const cycle = document.querySelector(".tenet-logo-nav-cycle");
+      return {
+        navH: nav.getBoundingClientRect().height,
+        cycleH: cycle.getBoundingClientRect().height,
+      };
+    });
+    expect(dims.cycleH).toBeGreaterThanOrEqual(dims.navH * 0.9);
+
+    const animated = await page.evaluate(() => {
+      const img = document.querySelector(".tenet-logo--navbar-dark-frame");
+      return img ? getComputedStyle(img).animationName : "";
+    });
+    expect(animated).toContain("navbar-logo-blend");
+  });
+
+  test("dark nav logo frames have transparent corners", async ({ page }) => {
     await page.goto("/");
     await setTheme(page, "dark");
     await page.waitForTimeout(250);
     const cornerAlpha = await page.evaluate(async () => {
-      const img = document.querySelector(".tenet-logo--nav");
+      const img = document.querySelector(".tenet-logo--navbar-dark-frame");
       const blob = await (await fetch(img.src)).blob();
       const bmp = await createImageBitmap(blob);
       const cv = new OffscreenCanvas(bmp.width, bmp.height);
@@ -129,10 +156,9 @@ test.describe("theme + logo", () => {
     await page.goto("/");
     await setTheme(page, "light");
     await page.waitForTimeout(250);
-    const logo = page.locator(".tenet-logo--nav");
+    const logo = page.locator(".tenet-logo--navbar-light");
     await expect(logo).toBeVisible();
     await expect(logo).toHaveAttribute("src", /logo-navbar-light/);
-    await expect(logo).toHaveClass(/tenet-logo--navbar-light/);
 
     const dims = await page.evaluate(() => {
       const nav = document.querySelector(".nav");
