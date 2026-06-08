@@ -11,18 +11,8 @@ const DOWNLOADS = [
   { id: "windows", label: "Windows", file: "tenet-windows-x86_64.exe", arch: "x86_64" },
 ];
 
-async function probeBinary(url) {
-  try {
-    const res = await fetch(url, { method: "HEAD", cache: "no-store" });
-    if (!res.ok) return false;
-    const type = (res.headers.get("content-type") || "").toLowerCase();
-    if (type.includes("text/html")) return false;
-    const len = Number(res.headers.get("content-length") || 0);
-    return len > 100_000;
-  } catch {
-    return false;
-  }
-}
+// Latest published release on the code repo (CORS-enabled JSON API).
+const RELEASE_API = "https://api.github.com/repos/maceip/tenet/releases/latest";
 
 function IconApple() {
   return (
@@ -51,38 +41,33 @@ function IconWindows() {
 const PLATFORM_ICONS = { macos: IconApple, linux: IconLinux, windows: IconWindows };
 
 function DownloadButtons({ className = "" }) {
-  const [ready, setReady] = useState(() => Object.fromEntries(DOWNLOADS.map((d) => [d.id, false])));
-  const [probed, setProbed] = useState(false);
+  const [assets, setAssets] = useState(null); // {file: download_url}, or {} once resolved/none
 
   useEffect(() => {
     let alive = true;
-    (async () => {
-      const entries = await Promise.all(
-        DOWNLOADS.map(async (d) => {
-          const url = asset(`downloads/${d.file}`);
-          const ok = await probeBinary(url);
-          return [d.id, ok];
-        }),
-      );
-      if (alive) {
-        setReady(Object.fromEntries(entries));
-        setProbed(true);
-      }
-    })();
+    fetch(RELEASE_API, { headers: { Accept: "application/vnd.github+json" }, cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!alive) return;
+        const map = {};
+        (data?.assets || []).forEach((a) => { map[a.name] = a.browser_download_url; });
+        setAssets(map);
+      })
+      .catch(() => { if (alive) setAssets({}); });
     return () => { alive = false; };
   }, []);
 
   return (
     <div className={`downloads ${className}`.trim()}>
-      <p className="downloads-label">debug client</p>
-      <div className="download-row" role="group" aria-label="Download debug client binaries">
+      <p className="downloads-label">download client</p>
+      <div className="download-row" role="group" aria-label="Download tenet client binaries">
         {DOWNLOADS.map((d) => {
           const Icon = PLATFORM_ICONS[d.id];
-          const url = asset(`downloads/${d.file}`);
-          const enabled = ready[d.id];
+          const url = assets ? assets[d.file] : undefined;
+          const enabled = Boolean(url);
           const title = enabled
             ? `Download tenet for ${d.label} (${d.arch})`
-            : `${d.label} debug build not available yet`;
+            : `${d.label} build not published yet`;
           if (enabled) {
             return (
               <a
@@ -114,7 +99,7 @@ function DownloadButtons({ className = "" }) {
               <Icon />
               <span className="dl-text">
                 <span className="dl-os">{d.label}</span>
-                <span className="dl-arch">{probed ? "soon" : "…"}</span>
+                <span className="dl-arch">{assets ? "soon" : "…"}</span>
               </span>
             </button>
           );
