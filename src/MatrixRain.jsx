@@ -519,33 +519,6 @@ export default function MatrixRain() {
       return n;
     }
 
-    function blitGlyph(ctx, glyphIdx, x, y, alpha, light) {
-      const { sx, sy } = glyphAtlasRect(instances[glyphIdx] !== undefined ? instances[glyphIdx] : glyphIdx);
-      const g = typeof glyphIdx === "number" && glyphIdx < GLYPHS.length ? glyphIdx : (instances[glyphIdx] | 0);
-      const rect = glyphAtlasRect(g);
-      const dx = x;
-      const dy = y;
-      const a = alpha;
-      if (light) {
-        ctx.globalAlpha = a * 0.88;
-        ctx.drawImage(atlas, rect.sx, rect.sy, CELL, CELL, dx - 0.6, dy - 0.6, CELL + 1.2, CELL + 1.2);
-        ctx.globalCompositeOperation = "source-in";
-        ctx.fillStyle = "rgba(229,53,43,1)";
-        ctx.fillRect(dx, dy, CELL, CELL);
-        ctx.globalCompositeOperation = "source-over";
-        ctx.globalAlpha = a * 0.94;
-        ctx.drawImage(atlas, rect.sx, rect.sy, CELL, CELL, dx, dy, CELL, CELL);
-        ctx.globalCompositeOperation = "lighter";
-        ctx.globalAlpha = a * 0.35;
-        ctx.fillStyle = "rgba(229,53,43,1)";
-        ctx.fillRect(dx, dy, CELL, CELL);
-        ctx.globalCompositeOperation = "source-over";
-        return;
-      }
-      ctx.globalAlpha = a;
-      ctx.drawImage(atlas, rect.sx, rect.sy, CELL, CELL, dx, dy, CELL, CELL);
-    }
-
     function drawCpu(n) {
       if (!cpuCtx) return;
       const light = isLightTheme();
@@ -566,14 +539,15 @@ export default function MatrixRain() {
         const { sx, sy } = glyphAtlasRect(g);
 
         if (light) {
-          cpuCtx.globalAlpha = alpha * 0.9;
-          cpuCtx.drawImage(atlas, sx, sy, CELL, CELL, x - 0.5, y - 0.5, CELL + 1, CELL + 1);
-          cpuCtx.globalCompositeOperation = "source-in";
-          cpuCtx.fillStyle = "#e5352b";
-          cpuCtx.fillRect(x, y, CELL, CELL);
-          cpuCtx.globalCompositeOperation = "source-over";
+          cpuCtx.shadowColor = `rgba(229,53,43,${alpha * 0.95})`;
+          cpuCtx.shadowBlur = 0;
+          cpuCtx.shadowOffsetX = 0.9;
+          cpuCtx.shadowOffsetY = 0.9;
           cpuCtx.globalAlpha = alpha * 0.95;
           cpuCtx.drawImage(atlas, sx, sy, CELL, CELL, x, y, CELL, CELL);
+          cpuCtx.shadowColor = "transparent";
+          cpuCtx.shadowOffsetX = 0;
+          cpuCtx.shadowOffsetY = 0;
         } else {
           const cx = x + CELL * 0.5;
           const cy = y + CELL * 0.5;
