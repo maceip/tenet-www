@@ -34,7 +34,7 @@ test.describe("status rail histogram", () => {
       const b = nodes[1].getBoundingClientRect();
       return b.left - a.right;
     });
-    expect(gaps).toBeGreaterThanOrEqual(2);
+    expect(gaps).toBeGreaterThanOrEqual(3);
 
     await expect(page.locator(".toprail-hist .rail-chip.online").last()).toBeVisible();
   });
