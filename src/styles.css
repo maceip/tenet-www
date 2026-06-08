@@ -100,6 +100,7 @@ img { max-width: 100%; display: block; }
 .rail-sep { color: #444; }
 .rail-dim { color: #6f6f6f; }
 .rail-spacer { flex: 1 1 auto; }
+@media (max-width: 900px) { .rail-extra { display: none; } }
 @media (max-width: 680px) { .rail-dim { display: none; } .rail-spacer { display: none; } }
 
 /* ---------- nav ---------- */

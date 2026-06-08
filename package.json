@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "refresh:status": "node scripts/refresh-network-status.mjs",
+    "prebuild": "node scripts/refresh-network-status.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test:e2e": "playwright test",

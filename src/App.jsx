@@ -16,9 +16,16 @@ const DOWNLOADS = [
 
 const RELEASE_DL = `${GH}/releases/latest/download`;
 const RELEASE_API = "https://api.github.com/repos/maceip/tenet/releases/latest";
-const DEFAULT_MATCHER = {
-  url: "https://ba637abc5bc8.aeon.site/",
-  healthz: "https://ba637abc5bc8.aeon.site/healthz",
+const DEFAULT_NETWORK = {
+  schema: "tenet.www_network_status.2026-06",
+  matcher: {
+    label: "bootstrap matcher",
+    host: "d51d8afc9668.aeon.site",
+    status: "checking",
+    tee: "attested nitro tee",
+  },
+  relay: { id: "reach-beta-1", host: "3.121.69.82:4433", status: "unknown" },
+  experts: { pool: "alpha.experts~tenet", count: 2, status: "unknown" },
 };
 
 function IconApple() {
@@ -167,46 +174,43 @@ function loadUptimeHistory() {
   return Array.from({ length: UPTIME_SLOTS }, () => "checking");
 }
 
+function railStatusStyle(status) {
+  if (status === "online" || status === "reachable") return ["#5ad17a", status];
+  if (status === "unreachable") return ["#e5352b", status];
+  return ["#9a9a9a", status === "checking" ? "checking…" : status];
+}
+
 function TopRail() {
-  const [status, setStatus] = useState("checking");
-  const [matcher, setMatcher] = useState(null);
+  const [network, setNetwork] = useState(DEFAULT_NETWORK);
   const [history, setHistory] = useState(loadUptimeHistory);
 
   useEffect(() => {
     let alive = true;
-    const apply = (data) => {
-      if (!alive || !data?.healthz) return;
-      const healthz = data.healthz;
-      const host = new URL(healthz).hostname;
-      setMatcher({ healthz, url: data.url || healthz.replace(/\/healthz$/, "/"), host });
-    };
-    fetch(asset("matcher.json"), { cache: "no-store" })
-      .then((r) => (r.ok && r.headers.get("content-type")?.includes("json") ? r.json() : null))
-      .then((data) => apply(data || DEFAULT_MATCHER))
-      .catch(() => { if (alive) apply(DEFAULT_MATCHER); });
-    return () => { alive = false; };
-  }, []);
-
-  useEffect(() => {
-    if (!matcher?.healthz) return undefined;
-    let alive = true;
     const check = () => {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 8000);
-      fetch(matcher.healthz, { cache: "no-store", signal: ctrl.signal })
-        .then((r) => {
+      fetch(`${asset("network-status.json")}?t=${Date.now()}`, {
+        cache: "no-store",
+        signal: ctrl.signal,
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
           if (!alive) return;
-          const next = r.ok ? "online" : "unreachable";
-          setStatus(next);
+          const next = data || DEFAULT_NETWORK;
+          setNetwork(next);
+          const matcherStatus = next?.matcher?.status || "unreachable";
           setHistory((prev) => {
-            const updated = [...prev.slice(1), next];
+            const updated = [...prev.slice(1), matcherStatus];
             try { localStorage.setItem(UPTIME_STORAGE_KEY, JSON.stringify(updated)); } catch { /* quota */ }
             return updated;
           });
         })
         .catch(() => {
           if (!alive) return;
-          setStatus("unreachable");
+          setNetwork((prev) => ({
+            ...prev,
+            matcher: { ...prev.matcher, status: "unreachable" },
+          }));
           setHistory((prev) => {
             const updated = [...prev.slice(1), "unreachable"];
             try { localStorage.setItem(UPTIME_STORAGE_KEY, JSON.stringify(updated)); } catch { /* quota */ }
@@ -218,14 +222,16 @@ function TopRail() {
     check();
     const iv = setInterval(check, 15000);
     return () => { alive = false; clearInterval(iv); };
-  }, [matcher]);
+  }, []);
 
-  const [dot, word] = {
-    checking: ["#9a9a9a", "checking…"],
-    online: ["#5ad17a", "online"],
-    unreachable: ["#e5352b", "unreachable"],
-  }[status];
-  const host = matcher?.host || "matcher pending deploy";
+  const matcher = network?.matcher || DEFAULT_NETWORK.matcher;
+  const relay = network?.relay;
+  const experts = network?.experts;
+  const [dot, word] = railStatusStyle(matcher.status || "checking");
+  const host = matcher.host || "matcher pending deploy";
+  const relayWord = relay?.status && relay.status !== "unknown" ? relay.status : null;
+  const expertLabel = experts?.count ? `${experts.count} experts` : null;
+
   return (
     <div className="toprail">
       <div
@@ -238,10 +244,22 @@ function TopRail() {
         ))}
       </div>
       <span className="rail-dot" style={{ background: dot, boxShadow: `0 0 8px ${dot}` }} />
-      <span className="rail-k">bootstrap matcher</span>
+      <span className="rail-k">{matcher.label || "bootstrap matcher"}</span>
       <span style={{ color: dot }}>{word}</span>
       <span className="rail-sep">·</span>
-      <span className="rail-dim">attested nitro tee · {host}</span>
+      <span className="rail-dim">{matcher.tee || "attested nitro tee"} · {host}</span>
+      {relay ? (
+        <>
+          <span className="rail-sep rail-extra">·</span>
+          <span className="rail-dim rail-extra">relay {relay.host}{relayWord ? ` · ${relayWord}` : ""}</span>
+        </>
+      ) : null}
+      {expertLabel ? (
+        <>
+          <span className="rail-sep rail-extra">·</span>
+          <span className="rail-dim rail-extra">{expertLabel}</span>
+        </>
+      ) : null}
       <span className="rail-spacer" />
       <span className="rail-dim">x402 · algorand · eurd</span>
     </div>
@@ -346,7 +364,7 @@ export default function App() {
       </section>
 
       <section className="bleed light">
-        <img src={asset("slides/countach.jpeg")} alt="" />
+        <img src={asset("slides/countach.webp")} alt="" />
         <div className="bleed-cap">self-driving commerce</div>
       </section>
 
@@ -364,12 +382,12 @@ export default function App() {
           ))}
         </ol>
         <figure className="arch">
-          <img src={asset("slides/architecture.jpeg")} alt="tenet architecture: attested matcher, mixnet/REACH, relaxed expert" />
+          <img src={asset("slides/architecture.webp")} alt="tenet architecture: attested matcher, mixnet/REACH, relaxed expert" />
         </figure>
       </section>
 
       <section className="closer">
-        <img src={asset("slides/ship.jpeg")} alt="" />
+        <img src={asset("slides/ship.webp")} alt="" />
         <div className="closer-overlay">
           <h2>GET EXPERTS.<br/>GET GOING.</h2>
         </div>

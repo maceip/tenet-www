@@ -51,15 +51,15 @@ export default function MatrixRain() {
         const y = drops[i] * FONT;
 
         if (light) {
-          // white glyphs + red glow -> red ghost glyphs on the white hero
-          ctx.shadowColor = "rgba(229,53,43,0.95)";
-          ctx.shadowBlur = 8;
-          ctx.fillStyle = "rgba(255,255,255,0.95)";
-        } else {
-          // classic matrix, red shade: white-hot head + red trail + red glow on black
+          // crisp white glyph with a tight red halo -> readable red ghost on white
           ctx.shadowColor = "rgba(229,53,43,0.9)";
-          ctx.shadowBlur = 7;
-          ctx.fillStyle = Math.random() > 0.94 ? "#ffd9d5" : "#ff4b40";
+          ctx.shadowBlur = 2;
+          ctx.fillStyle = "#ff453a";
+        } else {
+          // classic matrix, red shade: crisp red glyph, white-hot head, tight glow
+          ctx.shadowColor = "rgba(229,53,43,0.7)";
+          ctx.shadowBlur = 3;
+          ctx.fillStyle = Math.random() > 0.93 ? "#ffe2de" : "#ff4338";
         }
         ctx.fillText(ch, x, y);
 

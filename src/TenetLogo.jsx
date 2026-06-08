@@ -8,10 +8,11 @@ const asset = (p) => import.meta.env.BASE_URL + p;
 export default function TenetLogo({ variant = "nav", theme = "dark", className = "" }) {
   const isDark = theme === "dark";
   const useRed = isDark;
-  const src = asset(useRed ? "logo/logo-red.png" : "logo/logo-black.png");
+  const src = asset(useRed ? "logo/logo-red.webp" : "logo/logo-black.webp");
+  // intrinsic sizes of the cleaned/cropped transparent halftone assets
   const dims = useRed
-    ? { width: 1536, height: 1024 }
-    : { width: 1563, height: 1006 };
+    ? { width: 1144, height: 392 }
+    : { width: 1065, height: 351 };
 
   const classes = [
     "tenet-logo",
