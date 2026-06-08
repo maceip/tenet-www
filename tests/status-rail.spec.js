@@ -11,7 +11,7 @@ test.describe("status rail histogram", () => {
         body: JSON.stringify({
           schema: "tenet.www_network_status.2026-06",
           matcher: {
-            label: "bootstrap matcher",
+            label: "network",
             host: "d51d8afc9668.aeon.site",
             status: "online",
             tee: "attested nitro tee",

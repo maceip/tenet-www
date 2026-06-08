@@ -82,7 +82,7 @@ async function main() {
     generated_at: new Date().toISOString(),
     matcher: {
       id: "bootstrap",
-      label: "bootstrap matcher",
+      label: "network",
       url: matcherUrl || null,
       host,
       healthz: healthz || null,

@@ -19,7 +19,7 @@ const RELEASE_API = "https://api.github.com/repos/maceip/tenet/releases/latest";
 const DEFAULT_NETWORK = {
   schema: "tenet.www_network_status.2026-06",
   matcher: {
-    label: "bootstrap matcher",
+    label: "network",
     host: "d51d8afc9668.aeon.site",
     status: "checking",
     tee: "attested nitro tee",
@@ -251,7 +251,7 @@ function TopRail() {
         })}
       </div>
       <span className="rail-dot" style={{ background: dot, boxShadow: `0 0 8px ${dot}` }} />
-      <span className="rail-k">{matcher.label || "bootstrap matcher"}</span>
+      <span className="rail-k">{matcher.label || "network"}</span>
       <span style={{ color: dot }}>{word}</span>
       <span className="rail-sep">·</span>
       <span className="rail-dim">{matcher.tee || "attested nitro tee"} · {host}</span>
