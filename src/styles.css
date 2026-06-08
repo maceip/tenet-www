@@ -352,5 +352,6 @@ button.dl-btn:disabled { opacity: 0.38; cursor: not-allowed; }
   .demo { grid-template-columns: 1fr; }
   .vs { grid-template-columns: 1fr; gap: 28px; }
   .vs-mid { padding: 6px 0; }
-  .nav-right a:not(.pill) { display: none; }
+  .nav-right a:not(.brand) { display: none; }
+  .nav-right .theme-toggle { display: grid; }
 }

@@ -8,8 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:e2e": "playwright test",
-    "test:verify": "node tests/matrix-rain-verify.mjs",
-    "deploy": "scripts/deploy-public-computer.sh"
+    "test:verify": "node tests/matrix-rain-verify.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

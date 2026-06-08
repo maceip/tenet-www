@@ -4,8 +4,8 @@ import TenetLogo from "./TenetLogo.jsx";
 import ThemeToggle from "./ThemeToggle.jsx";
 import { getTheme, onThemeChange } from "./theme.js";
 
-const URL = "https://public.computer";
 const GH = "https://github.com/maceip/tenet";
+const HOME = import.meta.env.BASE_URL;
 const asset = (p) => import.meta.env.BASE_URL + p;
 
 const DOWNLOADS = [
@@ -47,7 +47,7 @@ function IconWindows() {
 
 const PLATFORM_ICONS = { macos: IconApple, linux: IconLinux, windows: IconWindows };
 
-function DownloadButtons({ className = "", showVersion = true }) {
+function DownloadButtons({ id, className = "", showVersion = true }) {
   const [tag, setTag] = useState(null);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ function DownloadButtons({ className = "", showVersion = true }) {
   }, [showVersion]);
 
   return (
-    <div className={`downloads ${className}`.trim()}>
+    <div id={id} className={`downloads ${className}`.trim()}>
       <p className="downloads-label">
         download client
         {tag ? <span className="downloads-tag">{tag}</span> : null}
@@ -257,16 +257,16 @@ export default function App() {
     <>
       <TopRail />
       <nav className="nav">
-        <a className="brand" href={URL}>
+        <a className="brand" href={HOME}>
           <TenetLogo variant="nav" theme={theme} />
         </a>
         <div className="nav-right">
           <a href="#network">network</a>
           <a href="#demo">demo</a>
           <a href="#how">how</a>
+          <a href="#download">download</a>
           <a href={GH}>github</a>
           <ThemeToggle />
-          <a className="pill" href={URL}>public.computer</a>
         </div>
       </nav>
 
@@ -372,7 +372,6 @@ export default function App() {
         <img src={asset("slides/ship.jpeg")} alt="" />
         <div className="closer-overlay">
           <h2>GET EXPERTS.<br/>GET GOING.</h2>
-          <a className="btn solid" href={URL}>public.computer</a>
         </div>
       </section>
 
@@ -384,7 +383,7 @@ export default function App() {
         <a href={GH}>github</a>
         <a href={`${GH}/releases/latest`}>releases</a>
       </footer>
-      <DownloadButtons className="foot-downloads" showVersion={false} />
+      <DownloadButtons id="download" className="foot-downloads" />
     </>
   );
 }
