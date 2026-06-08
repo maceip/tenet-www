@@ -232,13 +232,6 @@ img { max-width: 100%; display: block; }
   white-space: nowrap;
   border: 0;
 }
-.matrix-logo-anchor {
-  width: min(92vw, 680px);
-  aspect-ratio: 1144 / 392;
-  min-height: 88px;
-  pointer-events: none;
-}
-[data-theme="light"] .matrix-logo-anchor { aspect-ratio: 1065 / 351; }
 .wordmark-sub {
   font-family: var(--mono);
   color: var(--red);

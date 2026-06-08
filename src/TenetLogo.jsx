@@ -31,12 +31,38 @@ function NavLogoDarkCycle({ className = "" }) {
   );
 }
 
+const HERO_RED = FOOTER_RED;
+const HERO_BLACK = FOOTER_BLACK;
+const HERO_DIMS = {
+  red: { width: 1144, height: 392 },
+  black: { width: 1065, height: 351 },
+};
+
 /**
+ * Hero/footer: halftone webp wordmarks.
  * Navbar: light punk PNG; dark color-cycle PNG stack.
- * Footer: halftone webp wordmarks.
  */
 export default function TenetLogo({ variant = "nav", theme = "dark", className = "" }) {
   const isDark = theme === "dark";
+
+  if (variant === "hero") {
+    const useRed = isDark;
+    const src = useRed ? HERO_RED : HERO_BLACK;
+    const dims = useRed ? HERO_DIMS.red : HERO_DIMS.black;
+    const classes = [
+      "tenet-logo",
+      "tenet-logo--hero",
+      useRed ? "tenet-logo--red" : "tenet-logo--black",
+      className,
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return (
+      <h1 className="wordmark">
+        <img className={classes} src={src} alt="TENET" data-testid="tenet-logo-hero" {...dims} />
+      </h1>
+    );
+  }
 
   if (variant === "nav" && isDark) {
     return <NavLogoDarkCycle className={className} />;
