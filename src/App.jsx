@@ -16,6 +16,10 @@ const DOWNLOADS = [
 
 const RELEASE_DL = `${GH}/releases/latest/download`;
 const RELEASE_API = "https://api.github.com/repos/maceip/tenet/releases/latest";
+const DEFAULT_MATCHER = {
+  url: "https://ba637abc5bc8.aeon.site/",
+  healthz: "https://ba637abc5bc8.aeon.site/healthz",
+};
 
 function IconApple() {
   return (
@@ -155,15 +159,16 @@ function TopRail() {
 
   useEffect(() => {
     let alive = true;
+    const apply = (data) => {
+      if (!alive || !data?.healthz) return;
+      const healthz = data.healthz;
+      const host = new URL(healthz).hostname;
+      setMatcher({ healthz, url: data.url || healthz.replace(/\/healthz$/, "/"), host });
+    };
     fetch(asset("matcher.json"), { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!alive || !data?.healthz) return;
-        const healthz = data.healthz;
-        const host = new URL(healthz).hostname;
-        setMatcher({ healthz, url: data.url || healthz.replace(/\/healthz$/, "/"), host });
-      })
-      .catch(() => {});
+      .then((r) => (r.ok && r.headers.get("content-type")?.includes("json") ? r.json() : null))
+      .then((data) => apply(data || DEFAULT_MATCHER))
+      .catch(() => { if (alive) apply(DEFAULT_MATCHER); });
     return () => { alive = false; };
   }, []);
 
