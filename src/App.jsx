@@ -180,6 +180,12 @@ function railStatusStyle(status) {
   return ["#9a9a9a", status === "checking" ? "checking…" : status];
 }
 
+function normalizeChipStatus(status) {
+  if (status === "online" || status === "reachable") return "online";
+  if (status === "unreachable") return "unreachable";
+  return "checking";
+}
+
 function TopRail() {
   const [network, setNetwork] = useState(DEFAULT_NETWORK);
   const [history, setHistory] = useState(loadUptimeHistory);
@@ -198,7 +204,7 @@ function TopRail() {
           if (!alive) return;
           const next = data || DEFAULT_NETWORK;
           setNetwork(next);
-          const matcherStatus = next?.matcher?.status || "unreachable";
+          const matcherStatus = normalizeChipStatus(next?.matcher?.status || "unreachable");
           setHistory((prev) => {
             const updated = [...prev.slice(1), matcherStatus];
             try { localStorage.setItem(UPTIME_STORAGE_KEY, JSON.stringify(updated)); } catch { /* quota */ }
@@ -239,9 +245,10 @@ function TopRail() {
         role="img"
         aria-label={`Matcher uptime last ${UPTIME_SLOTS} checks`}
       >
-        {history.map((slot, i) => (
-          <span key={i} className={`rail-chip ${slot}`} title={slot} />
-        ))}
+        {history.map((slot, i) => {
+          const chip = normalizeChipStatus(slot);
+          return <span key={i} className={`rail-chip ${chip}`} title={chip} />;
+        })}
       </div>
       <span className="rail-dot" style={{ background: dot, boxShadow: `0 0 8px ${dot}` }} />
       <span className="rail-k">{matcher.label || "bootstrap matcher"}</span>

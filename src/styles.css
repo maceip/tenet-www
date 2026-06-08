@@ -81,20 +81,22 @@ img { max-width: 100%; display: block; }
 .toprail-hist {
   position: absolute;
   top: 0; left: 0; right: 0;
+  z-index: 1;
   display: flex;
   gap: 1px;
-  height: 2px;
+  height: 4px;
   pointer-events: none;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .rail-chip {
   flex: 1 1 0;
   min-width: 0;
-  height: 2px;
-  background: #3a3a3a;
+  height: 4px;
+  background: #5a5a5a;
 }
 .rail-chip.online { background: #5ad17a; }
 .rail-chip.unreachable { background: #e5352b; }
-.rail-chip.checking { background: #4a4a4a; }
+.rail-chip.checking { background: #5a5a5a; }
 .rail-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 .rail-k { color: #fff; }
 .rail-sep { color: #444; }
