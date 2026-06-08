@@ -17,6 +17,7 @@ const JOIN_PACK = process.env.JOIN_PACK
   || (existsSync(join(root, "../TENET/config/join-pack.json"))
     ? join(root, "../TENET/config/join-pack.json")
     : null);
+const NETWORK_CFG = join(publicDir, "network.json");
 
 async function probeHealthz(url, timeoutMs = 8000) {
   const ctrl = new AbortController();
@@ -57,6 +58,7 @@ async function main() {
     ? loadJson(join(publicDir, "matcher.json"))
     : null;
   const pack = JOIN_PACK && existsSync(JOIN_PACK) ? loadJson(JOIN_PACK) : null;
+  const networkCfg = existsSync(NETWORK_CFG) ? loadJson(NETWORK_CFG) : null;
 
   const matcherUrl = matcherCfg?.url || pack?.matcher?.url || "";
   const healthz = matcherCfg?.healthz || (matcherUrl ? `${matcherUrl.replace(/\/$/, "")}/healthz` : "");
@@ -69,8 +71,11 @@ async function main() {
 
   const matcherStatus = healthz ? await probeHealthz(healthz) : "unreachable";
 
-  const relay = pack?.reachability_relay;
-  const relayHost = relay ? `${relay.host}:${relay.port}` : null;
+  const relayFromPack = pack?.reachability_relay;
+  const relayFromCfg = networkCfg?.relay;
+  const relayHost = relayFromPack
+    ? `${relayFromPack.host}:${relayFromPack.port}`
+    : relayFromCfg?.host || null;
 
   const body = {
     schema: "tenet.www_network_status.2026-06",
@@ -86,15 +91,15 @@ async function main() {
     },
     relay: relayHost
       ? {
-          id: relay.relay_id || "reach",
+          id: relayFromPack?.relay_id || relayFromCfg?.id || "reach",
           host: relayHost,
           status: "unknown",
-          note: "UDP reachability relay — status inferred from network join pack",
+          note: "UDP reachability relay — listed from network join pack",
         }
       : null,
     experts: {
-      pool: pack?.discovery?.default_pool || "alpha.experts~tenet",
-      count: pack ? expertCountFromJoinPack(pack) : null,
+      pool: pack?.discovery?.default_pool || networkCfg?.experts?.pool || "alpha.experts~tenet",
+      count: pack ? expertCountFromJoinPack(pack) : networkCfg?.experts?.count ?? null,
       status: matcherStatus === "online" ? "reachable" : "unknown",
     },
   };

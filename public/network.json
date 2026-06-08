@@ -1,0 +1,11 @@
+{
+  "schema": "tenet.www_network.2026-06",
+  "relay": {
+    "id": "reach-beta-1",
+    "host": "3.121.69.82:4433"
+  },
+  "experts": {
+    "pool": "alpha.experts~tenet",
+    "count": 2
+  }
+}

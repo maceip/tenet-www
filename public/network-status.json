@@ -1,6 +1,6 @@
 {
   "schema": "tenet.www_network_status.2026-06",
-  "generated_at": "2026-06-08T19:57:05.329Z",
+  "generated_at": "2026-06-08T19:58:37.388Z",
   "matcher": {
     "id": "bootstrap",
     "label": "bootstrap matcher",
@@ -14,7 +14,7 @@
     "id": "reach-beta-1",
     "host": "3.121.69.82:4433",
     "status": "unknown",
-    "note": "UDP reachability relay — status inferred from network join pack"
+    "note": "UDP reachability relay — listed from network join pack"
   },
   "experts": {
     "pool": "alpha.experts~tenet",
