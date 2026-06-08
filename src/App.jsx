@@ -146,6 +146,16 @@ const STEPS = [
   ["5", "Pay the expert", "Settled in EURD over x402 on Algorand. Real money, so someone's accountable."],
 ];
 
+// What the network actually is — the substance under the demo.
+const FEATURES = [
+  ["Ask once", "Submit a decision to the live network. No directory to search, no cold DMs, no inbox to spam."],
+  ["Matched privately", "An attested TEE matcher picks the right experts from statistical manifests — without ever learning your question."],
+  ["Sealed transport", "Questions travel a Sphinx/Outfox mixnet. Relays forward the bytes; they can't read them."],
+  ["Experts stay home", "Experts answer from their own machine, behind NAT — no public port, no uploading their corpus."],
+  ["Reputation-staked", "Experts stake reputation and are paid per call. Corrupt a weighted majority — or don't bother."],
+  ["Provable work", "Laptop experts: reputation + random spot-audit. Opt-in cloud-TEE experts: a hard, attested proof they did the work."],
+];
+
 function MatrixRain() {
   const ref = useRef(null);
   useEffect(() => {
@@ -263,6 +273,7 @@ export default function App() {
       <nav className="nav">
         <a className="brand" href={URL}>TENET</a>
         <div className="nav-right">
+          <a href="#network">network</a>
           <a href="#demo">demo</a>
           <a href="#how">how</a>
           <a href={GH}>github</a>
@@ -312,6 +323,26 @@ export default function App() {
           </div>
           <h3>A network of experts</h3>
           <p className="muted">Independent, reputation-staked, paid per call. Corrupt a weighted majority — or don't bother.</p>
+        </div>
+      </section>
+
+      {/* NETWORK */}
+      <section id="network" className="band network">
+        <span className="tag">the network</span>
+        <h2 className="big">A network,<br/>not a model.</h2>
+        <p className="body wide">
+          tenet is a private mixture-of-experts. You ask once; the question is matched to whoever's
+          knowledge fits and routed to them sealed; they answer from their own machine; they get paid.
+          One large model gives you one opinion with one set of blind spots — tenet gives you the
+          specialist, privately, and makes them accountable for the answer.
+        </p>
+        <div className="feature-grid">
+          {FEATURES.map(([t, d]) => (
+            <div className="feature" key={t}>
+              <h4>{t}</h4>
+              <p className="muted">{d}</p>
+            </div>
+          ))}
         </div>
       </section>
 
