@@ -1,6 +1,6 @@
 {
   "schema": "tenet.www_network_status.2026-06",
-  "generated_at": "2026-06-08T23:17:30.006Z",
+  "generated_at": "2026-06-08T23:19:54.837Z",
   "matcher": {
     "id": "bootstrap",
     "label": "network",

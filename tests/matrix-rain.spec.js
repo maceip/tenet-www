@@ -89,6 +89,60 @@ test.describe("theme + logo", () => {
     await expect(logo).toHaveAttribute("src", /logo-black/);
   });
 
+  test("matrix rain stops before hero logo (no glyphs over wordmark)", async ({ page }) => {
+    await page.goto("/");
+    await setTheme(page, "dark");
+    await page.waitForSelector('[data-testid="tenet-logo-hero"]');
+    await page.waitForTimeout(2800);
+
+    const sample = await page.evaluate(() => {
+      const logo = document.querySelector('[data-testid="tenet-logo-hero"]');
+      const canvas = document.querySelector("canvas.matrix");
+      if (!logo || !canvas) return { ok: false };
+      const lr = logo.getBoundingClientRect();
+      const cr = canvas.getBoundingClientRect();
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const dpr = canvas.width / cr.width;
+
+      function redInRect(x, y, w, h) {
+        const x0 = Math.floor((x - cr.left) * dpr);
+        const y0 = Math.floor((y - cr.top) * dpr);
+        const ww = Math.max(1, Math.floor(w * dpr));
+        const hh = Math.max(1, Math.floor(h * dpr));
+        const data = ctx.getImageData(x0, y0, ww, hh).data;
+        let red = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+          if (a > 30 && r > 100 && r > g + 20) red++;
+        }
+        return red;
+      }
+
+      const inner = {
+        x: lr.left + lr.width * 0.22,
+        y: lr.top + lr.height * 0.28,
+        w: lr.width * 0.56,
+        h: lr.height * 0.44,
+      };
+      const rainBand = {
+        x: cr.left + 16,
+        y: cr.top + 16,
+        w: cr.width - 32,
+        h: Math.max(40, lr.top - cr.top - 8),
+      };
+
+      return {
+        ok: true,
+        logoRed: redInRect(inner.x, inner.y, inner.w, inner.h),
+        rainRed: redInRect(rainBand.x, rainBand.y, rainBand.w, rainBand.h),
+      };
+    });
+
+    expect(sample.ok).toBe(true);
+    expect(sample.rainRed).toBeGreaterThan(120);
+    expect(sample.logoRed).toBeLessThan(60);
+  });
+
   test("hero halftone logo has transparent corners", async ({ page }) => {
     await page.goto("/");
     await setTheme(page, "dark");
