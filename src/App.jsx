@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
+import DemoTerminal from "./DemoTerminal.jsx";
 import MatrixRain from "./MatrixRain.jsx";
 import TenetLogo from "./TenetLogo.jsx";
 import ThemeToggle from "./ThemeToggle.jsx";
@@ -99,19 +100,6 @@ function DownloadButtons({ id, className = "", showVersion = true }) {
   );
 }
 
-const DEMO = [
-  ["cmd", "agent: find me an airbnb in berlin — i don't want to deal with it"],
-  ["dim", "3 candidates found. about to book the cheapest, 4.8★ …"],
-  ["dim", "consulting the tenet expert network before committing"],
-  ["pay", "HTTP 402 Payment Required · €0.05 EURD · algorand"],
-  ["ok", "✓ paid · tx 4F9A…21BC ↗"],
-  ["dim", "routing question over the mixnet → berlin local expert"],
-  ["exp", "expert: listing A is Marzahn — 40 min out, recycled photos. classic scam. skip."],
-  ["exp", "expert: book listing B — Neukölln / Reuterkiez. that's where berlin actually lives."],
-  ["sw", "↳ switched pick: A → B"],
-  ["done", "decision made. you didn't have to."],
-];
-
 const STEPS = [
   ["1", "Ask once", "Your agent submits the decision to the live network."],
   ["2", "Match privately", "An attested TEE matcher selects experts from manifests — without leaking the question."],
@@ -128,37 +116,6 @@ const FEATURES = [
   ["Reputation-staked", "Experts stake reputation and are paid per call. Corrupt a weighted majority — or don't bother."],
   ["Provable work", "Laptop experts: reputation + random spot-audit. Opt-in cloud-TEE experts: a hard, attested proof they did the work."],
 ];
-
-function Terminal() {
-  const [n, setN] = useState(0);
-  const ref = useRef(null);
-  useEffect(() => {
-    if (n >= DEMO.length) return;
-    const t = setTimeout(() => setN((v) => v + 1), n === 0 ? 500 : 850);
-    return () => clearTimeout(t);
-  }, [n]);
-  useEffect(() => {
-    const el = ref.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [n]);
-  return (
-    <div className="term">
-      <div className="term-bar">
-        <span className="dot" /><span className="dot" /><span className="dot" />
-        <span className="term-title">self-driving-commerce — berlin</span>
-      </div>
-      <div className="term-body" ref={ref}>
-        {DEMO.slice(0, n).map(([c, t], i) => (
-          <div key={i} className={`line ${c}`}>{t}</div>
-        ))}
-        {n < DEMO.length && <span className="cursor">▌</span>}
-        {n >= DEMO.length && (
-          <button className="replay" onClick={() => setN(0)}>↻ replay</button>
-        )}
-      </div>
-    </div>
-  );
-}
 
 const UPTIME_SLOTS = 30;
 const UPTIME_STORAGE_KEY = "tenet-matcher-uptime-v1";
@@ -379,9 +336,12 @@ export default function App() {
             EURD over x402 on Algorand</strong>, asks the tenet Berlin expert over the real mixnet, and
             switches its pick when the expert flags a scam. Real payment. Real network. Real verdict.
           </p>
-          <p className="muted small">We don't click "book" for you — booking is one boring API call. The judgment is the hard part, and that's what you pay for.</p>
+          <p className="muted small">
+            Run <code>tenet serve</code> locally to wire this terminal to your binary, or watch the offline replay.
+            We don't click "book" for you — booking is one boring API call.
+          </p>
         </div>
-        <Terminal />
+        <DemoTerminal />
       </section>
 
       <section className="bleed light">

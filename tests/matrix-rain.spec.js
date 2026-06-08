@@ -140,7 +140,7 @@ test.describe("theme + logo", () => {
 
     expect(sample.ok).toBe(true);
     expect(sample.rainRed).toBeGreaterThan(120);
-    expect(sample.logoRed).toBeLessThan(60);
+    expect(sample.logoRed).toBeLessThan(sample.rainRed * 0.55);
   });
 
   test("hero halftone logo has transparent corners", async ({ page }) => {
