@@ -1,0 +1,93 @@
+{
+  "source": "https://r3f.maximeheckel.com/",
+  "author": "Maxime Heckel",
+  "license": "MIT — reference shaders from blog.maximeheckel.com; do not redistribute without attribution",
+  "routes": [
+    "lego",
+    "sdf3",
+    "sdf4",
+    "sdf5",
+    "sdf6",
+    "sdf7",
+    "sdf8",
+    "sdf9",
+    "sdf10",
+    "sdf11",
+    "sdf12",
+    "sdf13"
+  ],
+  "extracted": [
+    {
+      "id": "lego",
+      "title": "Lego pixel effect",
+      "fragment": "lego.frag.glsl",
+      "vertex": null
+    },
+    {
+      "id": "sdf10",
+      "title": "Volumetric Raymarching - Fluffier Cloud with physically accurate lighting",
+      "fragment": "sdf10.frag.glsl",
+      "vertex": "sdf10.vert.glsl"
+    },
+    {
+      "id": "sdf11",
+      "title": "Fractal 1",
+      "fragment": "sdf11.frag.glsl",
+      "vertex": null
+    },
+    {
+      "id": "sdf12",
+      "title": "Fractal 2",
+      "fragment": "sdf12.frag.glsl",
+      "vertex": null
+    },
+    {
+      "id": "sdf13",
+      "title": null,
+      "fragment": "sdf13.frag.glsl",
+      "vertex": "sdf13.vert.glsl"
+    },
+    {
+      "id": "sdf3",
+      "title": "SDF 3",
+      "fragment": "sdf3.frag.glsl",
+      "vertex": "_shared-plane.vert.glsl"
+    },
+    {
+      "id": "sdf4",
+      "title": "SDF 4 - Smoothmin union and Perlin noise",
+      "fragment": "sdf4.frag.glsl",
+      "vertex": null
+    },
+    {
+      "id": "sdf5",
+      "title": "SDF 5 - Infinity",
+      "fragment": "sdf5.frag.glsl",
+      "vertex": null
+    },
+    {
+      "id": "sdf6",
+      "title": null,
+      "fragment": "sdf6.frag.glsl",
+      "vertex": null
+    },
+    {
+      "id": "sdf7",
+      "title": "SDF 7 - Terrain generation with value noise derivative",
+      "fragment": "sdf7.frag.glsl",
+      "vertex": null
+    },
+    {
+      "id": "sdf8",
+      "title": "Volumetric Raymarching - Simple Clouds (not physically accurate)",
+      "fragment": "sdf8.frag.glsl",
+      "vertex": null
+    },
+    {
+      "id": "sdf9",
+      "title": "Volumetric Raymarching - Attempt at a physically accurate cloud",
+      "fragment": "sdf9.frag.glsl",
+      "vertex": null
+    }
+  ]
+}

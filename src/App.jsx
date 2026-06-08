@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import MatrixRain from "./MatrixRain.jsx";
 
 const URL = "https://public.computer";
 const GH = "https://github.com/maceip/tenet";
@@ -11,7 +12,8 @@ const DOWNLOADS = [
   { id: "windows", label: "Windows", file: "tenet-windows-x86_64.exe", arch: "x86_64" },
 ];
 
-// Latest published release on the code repo (CORS-enabled JSON API).
+// Official CI binaries — /releases/latest/download/ always tracks the newest tag.
+const RELEASE_DL = `${GH}/releases/latest/download`;
 const RELEASE_API = "https://api.github.com/repos/maceip/tenet/releases/latest";
 
 function IconApple() {
@@ -40,68 +42,44 @@ function IconWindows() {
 
 const PLATFORM_ICONS = { macos: IconApple, linux: IconLinux, windows: IconWindows };
 
-function DownloadButtons({ className = "" }) {
-  const [assets, setAssets] = useState(null); // {file: download_url}, or {} once resolved/none
+function DownloadButtons({ className = "", showVersion = true }) {
+  const [tag, setTag] = useState(null);
 
   useEffect(() => {
+    if (!showVersion) return undefined;
     let alive = true;
     fetch(RELEASE_API, { headers: { Accept: "application/vnd.github+json" }, cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!alive) return;
-        const map = {};
-        (data?.assets || []).forEach((a) => { map[a.name] = a.browser_download_url; });
-        setAssets(map);
-      })
-      .catch(() => { if (alive) setAssets({}); });
+      .then((data) => { if (alive && data?.tag_name) setTag(data.tag_name); })
+      .catch(() => {});
     return () => { alive = false; };
-  }, []);
+  }, [showVersion]);
 
   return (
     <div className={`downloads ${className}`.trim()}>
-      <p className="downloads-label">download client</p>
+      <p className="downloads-label">
+        download client
+        {tag ? <span className="downloads-tag">{tag}</span> : null}
+      </p>
       <div className="download-row" role="group" aria-label="Download tenet client binaries">
         {DOWNLOADS.map((d) => {
           const Icon = PLATFORM_ICONS[d.id];
-          const url = assets ? assets[d.file] : undefined;
-          const enabled = Boolean(url);
-          const title = enabled
-            ? `Download tenet for ${d.label} (${d.arch})`
-            : `${d.label} build not published yet`;
-          if (enabled) {
-            return (
-              <a
-                key={d.id}
-                className="dl-btn"
-                href={url}
-                download
-                title={title}
-                aria-label={title}
-              >
-                <Icon />
-                <span className="dl-text">
-                  <span className="dl-os">{d.label}</span>
-                  <span className="dl-arch">{d.arch}</span>
-                </span>
-              </a>
-            );
-          }
+          const url = `${RELEASE_DL}/${d.file}`;
+          const title = `Download tenet for ${d.label} (${d.arch})`;
           return (
-            <button
+            <a
               key={d.id}
-              type="button"
               className="dl-btn"
-              disabled
+              href={url}
               title={title}
               aria-label={title}
-              aria-disabled="true"
             >
               <Icon />
               <span className="dl-text">
                 <span className="dl-os">{d.label}</span>
-                <span className="dl-arch">{assets ? "soon" : "…"}</span>
+                <span className="dl-arch">{d.arch}</span>
               </span>
-            </button>
+            </a>
           );
         })}
       </div>
@@ -140,50 +118,6 @@ const FEATURES = [
   ["Reputation-staked", "Experts stake reputation and are paid per call. Corrupt a weighted majority — or don't bother."],
   ["Provable work", "Laptop experts: reputation + random spot-audit. Opt-in cloud-TEE experts: a hard, attested proof they did the work."],
 ];
-
-function MatrixRain() {
-  const ref = useRef(null);
-  useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const glyphs = "アァカサタナハマヤラワガザダバパゴ012345789ABCDEFZ$€<>/\\|=+".split("");
-    const fontSize = 18;
-    let W, H, cols, drops, raf;
-    function resize() {
-      W = canvas.width = canvas.offsetWidth;
-      H = canvas.height = canvas.offsetHeight;
-      cols = Math.max(1, Math.floor(W / fontSize));
-      drops = Array.from({ length: cols }, () => Math.floor((Math.random() * -H) / fontSize));
-    }
-    resize();
-    window.addEventListener("resize", resize);
-    function draw() {
-      ctx.fillStyle = "rgba(10,10,10,0.10)"; // fade the trails
-      ctx.fillRect(0, 0, W, H);
-      ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
-      for (let i = 0; i < cols; i++) {
-        const ch = glyphs[(Math.random() * glyphs.length) | 0];
-        const x = i * fontSize;
-        const y = drops[i] * fontSize;
-        ctx.shadowColor = "#e5352b"; // red glisten
-        ctx.shadowBlur = 10;
-        ctx.fillStyle = "rgba(255,255,255,0.92)"; // white glyph
-        ctx.fillText(ch, x, y);
-        ctx.shadowBlur = 0;
-        if (y > H && Math.random() > 0.972) drops[i] = 0;
-        drops[i] += 0.6;
-      }
-      raf = requestAnimationFrame(draw);
-    }
-    draw();
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
-    };
-  }, []);
-  return <canvas ref={ref} className="matrix" aria-hidden="true" />;
-}
 
 function Terminal() {
   const [n, setN] = useState(0);
@@ -384,7 +318,9 @@ export default function App() {
         <span>TENET</span>
         <span className="muted">self-driving commerce · Algorand x402</span>
         <a href={GH}>github</a>
+        <a href={`${GH}/releases/latest`}>releases</a>
       </footer>
+      <DownloadButtons className="foot-downloads" showVersion={false} />
     </>
   );
 }
