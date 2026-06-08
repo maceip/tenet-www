@@ -268,8 +268,11 @@ function TopRail() {
 
 export default function App() {
   const [theme, setTheme] = useState(getTheme);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => onThemeChange(setTheme), []);
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <>
@@ -279,12 +282,23 @@ export default function App() {
           <TenetLogo variant="nav" theme={theme} />
         </a>
         <div className="nav-right">
-          <a href="#network">network</a>
-          <a href="#demo">demo</a>
-          <a href="#how">how</a>
-          <a href="#download">download</a>
-          <a href={GH}>github</a>
+          <div className={`nav-links${menuOpen ? " open" : ""}`}>
+            <a href="#network" onClick={closeMenu}>network</a>
+            <a href="#demo" onClick={closeMenu}>demo</a>
+            <a href="#how" onClick={closeMenu}>how</a>
+            <a href="#download" onClick={closeMenu}>download</a>
+            <a href={GH} onClick={closeMenu}>github</a>
+          </div>
           <ThemeToggle />
+          <button
+            type="button"
+            className="nav-burger"
+            aria-label="Menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            {menuOpen ? "✕" : "☰"}
+          </button>
         </div>
       </nav>
 
