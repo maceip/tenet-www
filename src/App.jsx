@@ -153,9 +153,24 @@ function Terminal() {
   );
 }
 
+const UPTIME_SLOTS = 30;
+const UPTIME_STORAGE_KEY = "tenet-matcher-uptime-v1";
+
+function loadUptimeHistory() {
+  try {
+    const raw = localStorage.getItem(UPTIME_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(parsed) && parsed.length === UPTIME_SLOTS) return parsed;
+  } catch {
+    /* ignore corrupt history */
+  }
+  return Array.from({ length: UPTIME_SLOTS }, () => "checking");
+}
+
 function TopRail() {
   const [status, setStatus] = useState("checking");
   const [matcher, setMatcher] = useState(null);
+  const [history, setHistory] = useState(loadUptimeHistory);
 
   useEffect(() => {
     let alive = true;
@@ -179,8 +194,25 @@ function TopRail() {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 8000);
       fetch(matcher.healthz, { cache: "no-store", signal: ctrl.signal })
-        .then((r) => { if (alive) setStatus(r.ok ? "online" : "unreachable"); })
-        .catch(() => { if (alive) setStatus("unreachable"); })
+        .then((r) => {
+          if (!alive) return;
+          const next = r.ok ? "online" : "unreachable";
+          setStatus(next);
+          setHistory((prev) => {
+            const updated = [...prev.slice(1), next];
+            try { localStorage.setItem(UPTIME_STORAGE_KEY, JSON.stringify(updated)); } catch { /* quota */ }
+            return updated;
+          });
+        })
+        .catch(() => {
+          if (!alive) return;
+          setStatus("unreachable");
+          setHistory((prev) => {
+            const updated = [...prev.slice(1), "unreachable"];
+            try { localStorage.setItem(UPTIME_STORAGE_KEY, JSON.stringify(updated)); } catch { /* quota */ }
+            return updated;
+          });
+        })
         .finally(() => clearTimeout(timer));
     };
     check();
@@ -196,6 +228,15 @@ function TopRail() {
   const host = matcher?.host || "matcher pending deploy";
   return (
     <div className="toprail">
+      <div
+        className="toprail-hist"
+        role="img"
+        aria-label={`Matcher uptime last ${UPTIME_SLOTS} checks`}
+      >
+        {history.map((slot, i) => (
+          <span key={i} className={`rail-chip ${slot}`} title={slot} />
+        ))}
+      </div>
       <span className="rail-dot" style={{ background: dot, boxShadow: `0 0 8px ${dot}` }} />
       <span className="rail-k">bootstrap matcher</span>
       <span style={{ color: dot }}>{word}</span>
