@@ -115,8 +115,9 @@ img { max-width: 100%; display: block; }
   background: var(--nav-bg);
   backdrop-filter: saturate(140%) blur(10px);
   border-bottom: 1px solid var(--nav-border);
+  overflow: visible;
 }
-.brand { display: flex; align-items: center; }
+.brand { display: flex; align-items: center; overflow: visible; }
 .nav-right { display: flex; align-items: center; gap: clamp(14px, 2vw, 22px); font-size: 14px; }
 .nav-links { display: flex; align-items: center; gap: clamp(14px, 2vw, 28px); }
 .nav-right a { color: var(--muted); }
@@ -145,6 +146,13 @@ img { max-width: 100%; display: block; }
 .tenet-logo { display: block; height: auto; }
 .tenet-logo--hero { width: min(92vw, 680px); }
 .tenet-logo--nav { height: 34px; width: auto; }
+.tenet-logo--navbar-light {
+  height: 72px;
+  width: auto;
+  max-width: min(46vw, 260px);
+  margin: -18px 0;
+  object-fit: contain;
+}
 .tenet-logo--footer { height: 24px; width: auto; }
 /* transparent PNGs — no blend-mode white-knockout hacks. soft glow on the red mark. */
 [data-theme="dark"] .tenet-logo--red { filter: drop-shadow(0 0 22px rgba(229, 53, 43, 0.30)); }

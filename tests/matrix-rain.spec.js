@@ -108,7 +108,7 @@ test.describe("theme + logo", () => {
     expect(logoPixels.red).toBeGreaterThan(200);
   });
 
-  test("nav logo has a transparent background (no white box)", async ({ page }) => {
+  test("dark nav logo has a transparent background (no white box)", async ({ page }) => {
     await page.goto("/");
     await setTheme(page, "dark");
     await page.waitForTimeout(250);
@@ -123,6 +123,25 @@ test.describe("theme + logo", () => {
       return corners.map(([x, y]) => cx.getImageData(x, y, 1, 1).data[3]);
     });
     for (const a of cornerAlpha) expect(a).toBeLessThan(20);
+  });
+
+  test("light nav uses punk navbar logo spanning nav height", async ({ page }) => {
+    await page.goto("/");
+    await setTheme(page, "light");
+    await page.waitForTimeout(250);
+    const logo = page.locator(".tenet-logo--nav");
+    await expect(logo).toBeVisible();
+    await expect(logo).toHaveAttribute("src", /logo-navbar-light/);
+    await expect(logo).toHaveClass(/tenet-logo--navbar-light/);
+
+    const dims = await page.evaluate(() => {
+      const nav = document.querySelector(".nav");
+      const img = document.querySelector(".tenet-logo--nav");
+      const nr = nav.getBoundingClientRect();
+      const ir = img.getBoundingClientRect();
+      return { navH: nr.height, imgH: ir.height };
+    });
+    expect(dims.imgH).toBeGreaterThanOrEqual(dims.navH * 0.9);
   });
 
   test("theme toggle persists on reload", async ({ page }) => {

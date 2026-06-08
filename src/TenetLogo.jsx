@@ -7,17 +7,21 @@ const asset = (p) => import.meta.env.BASE_URL + p;
  */
 export default function TenetLogo({ variant = "nav", theme = "dark", className = "" }) {
   const isDark = theme === "dark";
+  const navLight = variant === "nav" && !isDark;
   const useRed = isDark;
-  const src = asset(useRed ? "logo/logo-red.webp" : "logo/logo-black.webp");
-  // intrinsic sizes of the cleaned/cropped transparent halftone assets
-  const dims = useRed
-    ? { width: 1144, height: 392 }
-    : { width: 1065, height: 351 };
+  const src = navLight
+    ? asset("logo/logo-navbar-light.png")
+    : asset(useRed ? "logo/logo-red.webp" : "logo/logo-black.webp");
+  const dims = navLight
+    ? { width: 684, height: 497 }
+    : useRed
+      ? { width: 1144, height: 392 }
+      : { width: 1065, height: 351 };
 
   const classes = [
     "tenet-logo",
     `tenet-logo--${variant}`,
-    useRed ? "tenet-logo--red" : "tenet-logo--black",
+    navLight ? "tenet-logo--navbar-light" : useRed ? "tenet-logo--red" : "tenet-logo--black",
     className,
   ]
     .filter(Boolean)
