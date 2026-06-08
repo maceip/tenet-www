@@ -76,26 +76,44 @@ test.describe("matrix rain", () => {
 });
 
 test.describe("theme + logo", () => {
-  test("hero logo swaps with theme", async ({ page }) => {
+  test("hero wordmark anchor + glyph logo region", async ({ page }) => {
     await page.goto("/");
     await setTheme(page, "dark");
-    await page.waitForTimeout(200);
-    const logo = page.locator('[data-testid="tenet-logo-hero"]');
-    await expect(logo).toBeVisible();
-    await expect(logo).toHaveAttribute("src", /logo-red/);
+    await page.waitForTimeout(2200);
+    const anchor = page.locator(".matrix-logo-anchor");
+    await expect(anchor).toBeVisible();
+    await expect(anchor).toHaveAttribute("aria-label", "TENET");
 
-    await setTheme(page, "light");
-    await page.waitForTimeout(200);
-    await expect(logo).toHaveAttribute("src", /logo-black/);
+    const logoPixels = await page.evaluate(() => {
+      const anchor = document.querySelector(".matrix-logo-anchor");
+      const canvas = document.querySelector("canvas.matrix");
+      if (!anchor || !canvas) return { ok: false };
+      const ar = anchor.getBoundingClientRect();
+      const cr = canvas.getBoundingClientRect();
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const dpr = canvas.width / cr.width;
+      const x0 = Math.floor((ar.left - cr.left) * dpr);
+      const y0 = Math.floor((ar.top - cr.top) * dpr);
+      const w = Math.floor(ar.width * dpr);
+      const h = Math.floor(ar.height * dpr);
+      const data = ctx.getImageData(x0, y0, w, h).data;
+      let red = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+        if (a > 30 && r > 100 && r > g + 20) red++;
+      }
+      return { ok: true, red };
+    });
+    expect(logoPixels.ok).toBe(true);
+    expect(logoPixels.red).toBeGreaterThan(200);
   });
 
-  test("hero + nav logos have a transparent background (no white box)", async ({ page }) => {
+  test("nav logo has a transparent background (no white box)", async ({ page }) => {
     await page.goto("/");
     await setTheme(page, "dark");
     await page.waitForTimeout(250);
-    // Decode the actual logo image and sample its corners; a white box would be opaque.
     const cornerAlpha = await page.evaluate(async () => {
-      const img = document.querySelector('[data-testid="tenet-logo-hero"]');
+      const img = document.querySelector(".tenet-logo--nav");
       const blob = await (await fetch(img.src)).blob();
       const bmp = await createImageBitmap(blob);
       const cv = new OffscreenCanvas(bmp.width, bmp.height);
@@ -104,7 +122,7 @@ test.describe("theme + logo", () => {
       const corners = [[2, 2], [bmp.width - 3, 2], [2, bmp.height - 3]];
       return corners.map(([x, y]) => cx.getImageData(x, y, 1, 1).data[3]);
     });
-    for (const a of cornerAlpha) expect(a).toBeLessThan(20); // corners transparent
+    for (const a of cornerAlpha) expect(a).toBeLessThan(20);
   });
 
   test("theme toggle persists on reload", async ({ page }) => {

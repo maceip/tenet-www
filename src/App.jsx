@@ -312,7 +312,9 @@ export default function App() {
       <header className="hero">
         <MatrixRain />
         <div className="hero-inner">
-          <TenetLogo variant="hero" theme={theme} />
+          <h1 className="wordmark matrix-logo-anchor" aria-label="TENET">
+            <span className="visually-hidden">TENET</span>
+          </h1>
           <div className="wordmark-sub">self-driving commerce</div>
           <p className="lede">
             Your agent makes the decision you'd rather not — and <strong>pays an expert it can't fool.</strong>

@@ -181,6 +181,22 @@ img { max-width: 100%; display: block; }
   max-width: 900px;
 }
 .wordmark { margin: 0; line-height: 0; }
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.matrix-logo-anchor {
+  width: min(92vw, 680px);
+  aspect-ratio: 1144 / 392;
+  min-height: 88px;
+  pointer-events: none;
+}
+[data-theme="light"] .matrix-logo-anchor { aspect-ratio: 1065 / 351; }
 .wordmark-sub {
   font-family: var(--mono);
   color: var(--red);
